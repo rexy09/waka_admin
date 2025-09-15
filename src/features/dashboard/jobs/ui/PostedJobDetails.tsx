@@ -67,7 +67,6 @@ export default function PostedJobDetails() {
   >([]);
   const [loadingHired, setLoadingHired] = useState(false);
   const [loadingUnemployment, setLoadingUnemployment] = useState("");
-  const [authModalStatus, openAuthModal] = useState(false);
   const [activeTab, setActiveTab] = useState("applicants");
 
   const tabs = [

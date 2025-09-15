@@ -7,13 +7,11 @@ import { Outlet, ScrollRestoration } from "react-router-dom";
 import Env from "../../config/env";
 import { messaging } from "../../config/firebase";
 import useAuthServices from "../../features/auth/services";
-import { useNotificationStore } from "../../features/dashboard/notifications/stores";
 import DasboardFooter from "../navs/dashboard/footer/DasboardFooter";
 import HeaderMenu from "../navs/dashboard/header/HeaderMenu";
 import Sidebar from "../navs/dashboard/sidebar/Sidebar";
 
 export default function DashboardLayout() {
-  const notificationStore = useNotificationStore();
 
   const [opened, { toggle }] = useDisclosure();
   const { updateUserDevice } = useAuthServices();

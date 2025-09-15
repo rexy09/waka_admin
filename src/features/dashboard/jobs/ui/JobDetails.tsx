@@ -15,16 +15,12 @@ import {
 import { notifications } from "@mantine/notifications";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import useIsAuthenticated from "react-auth-kit/hooks/useIsAuthenticated";
 import { FaMapMarkedAlt } from "react-icons/fa";
 import { FaMoneyBills } from "react-icons/fa6";
-import { FiBookmark } from "react-icons/fi";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdBusinessCenter, MdVerified } from "react-icons/md";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useParams } from "react-router-dom";
-import { IUser } from "../../../auth/types";
 import { timestampToISO } from "../../../hooks/utils";
 import JobCard from "../components/JobCard";
 import { JobCardSkeleton, JobDetailsCardSkeleton } from "../components/Loaders";
@@ -33,17 +29,10 @@ import { useJobServices } from "../services";
 import { IJobPost, PaginatedResponse } from "../types";
 
 export default function JobDetails() {
-  const isAuthenticated = useIsAuthenticated();
-  const authUser = useAuthUser<IUser>();
 
   const {
     getJob,
     getRelatedJobs,
-    postJobApplication,
-    userAppliedForJob,
-    isJobSaved,
-    saveJob,
-    unsaveJob,
   } = useJobServices();
   const { id } = useParams();
 
@@ -51,91 +40,12 @@ export default function JobDetails() {
   const [_loadingJobs, setLoadingJobs] = useState(false);
   const [jobs, setJobs] = useState<PaginatedResponse<IJobPost>>();
   const [job, setJob] = useState<IJobPost>();
-  const [coverLetter, setCoverLetter] = useState("");
-  const [hasApplied, setHasApplied] = useState(false);
-  const [checkingApplication, setCheckingApplication] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [checkingSavedStatus, setCheckingSavedStatus] = useState(false);
-  const [authModalStatus, openAuthModal] = useState(false);
 
 
 
-  const checkUserApplication = async () => {
-    if (!job || !authUser?.uid || !isAuthenticated) return;
 
-    setCheckingApplication(true);
-    try {
-      const applied = await userAppliedForJob(job.id, authUser.uid);
-      setHasApplied(applied);
-    } catch (error) {
-      console.error("Error checking application status:", error);
-    } finally {
-      setCheckingApplication(false);
-    }
-  };
 
-  const checkSavedStatus = async () => {
-    if (!job || !authUser?.uid || !isAuthenticated) return;
 
-    setCheckingSavedStatus(true);
-    try {
-      const saved = await isJobSaved(job.id);
-      setIsSaved(saved);
-    } catch (error) {
-      console.error("Error checking saved status:", error);
-    } finally {
-      setCheckingSavedStatus(false);
-    }
-  };
-
-  const handleSaveToggle = async () => {
-    if (!job) return;
-
-    if (!isAuthenticated || !authUser?.uid) {
-      openAuthModal(true);
-      // notifications.show({
-      //   color: "blue",
-      //   title: "Authentication Required",
-      //   message: "Please sign in to save jobs",
-      // });
-      return;
-    }
-
-    if (isSaving || checkingSavedStatus) {
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      if (isSaved) {
-        await unsaveJob(job.id);
-        setIsSaved(false);
-        notifications.show({
-          color: "green",
-          title: "Success",
-          message: "Job removed from saved jobs",
-        });
-      } else {
-        await saveJob(job.id);
-        setIsSaved(true);
-        notifications.show({
-          color: "green",
-          title: "Success",
-          message: "Job saved successfully",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error toggling save status:", error);
-      notifications.show({
-        color: "red",
-        title: "Error",
-        message: error.message || "Failed to update saved status",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const fetchData = () => {
     setIsLoading(true);
@@ -179,12 +89,7 @@ export default function JobDetails() {
       fetchRelatedJobs();
     }
   }, [job]);
-  useEffect(() => {
-    if (job && isAuthenticated && authUser?.uid) {
-      checkUserApplication();
-      checkSavedStatus();
-    }
-  }, [job, isAuthenticated, authUser?.uid]);
+
   const skeletons = Array.from({ length: 6 }, (_, index) => (
     <JobCardSkeleton key={index} />
   ));
@@ -226,29 +131,7 @@ export default function JobDetails() {
                 <Text size="28px" fw={700} c="#141514">
                   Job Details
                 </Text>
-                <Group>
-                  <Button
-                    variant="filled"
-                    color={isSaved ? "#151F42" : "#E5E5E5"}
-                    c={isSaved ? "white" : "black"}
-                    size="xs"
-                    radius={"md"}
-                    fw={500}
-                    leftSection={
-                      <FiBookmark
-                        size={16}
-                        fill={isSaved ? "white" : "none"}
-                        color={isSaved ? "white" : "black"}
-                      />
-                    }
-                    onClick={handleSaveToggle}
-                    loading={isSaving || checkingSavedStatus}
-                    disabled={isSaving || checkingSavedStatus}
-                  >
-                    {isSaved ? "Saved" : "Save job"}
-                  </Button>
-                  
-                </Group>
+               
               </Group>
               <Space h="md" />
               <Card p={"md"} radius={"md"}>
