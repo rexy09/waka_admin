@@ -30,7 +30,6 @@ import { IoArrowBack, IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdBusinessCenter, MdOutlineCall, MdVerified } from "react-icons/md";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useNavigate, useParams } from "react-router-dom";
-import AuthModal from "../../../auth/components/AuthModal";
 import { IUser } from "../../../auth/types";
 import { JobDetailsCardSkeleton } from "../components/Loaders";
 import { useJobServices } from "../services";
@@ -345,60 +344,10 @@ export default function PostedJobDetails() {
       </Group>
     </Paper>
   ));
-  // const hiredCards = hiredApplications.map((application, index) => (
-  //   <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={index}>
-  //     <Group wrap="nowrap" align="center" justify="space-between">
-  //       <Group wrap="nowrap" gap={"xs"}>
-  //         <Avatar
-  //           w="50px"
-  //           h="50px"
-  //           radius={"xl"}
-  //           // src={job?.avatarUrl}
-  //         />
-  //         <div>
-  //           <Text size="16px" fw={500} c="#000000">
-  //             {application?.applicantName}
-  //           </Text>
-  //           <Space h="5px" />
-  //           <Group wrap="nowrap" gap={3}>
-  //             {/* <IoTimeOutline size={14} color="#596258" /> */}
-  //             <Text size="14px" fw={400} c="#596258">
-  //               Hired at{" "}
-  //               {moment(
-  //                 typeof application?.dateHired === "string"
-  //                   ? new Date(application?.dateHired)
-  //                   : application?.dateHired.toDate()
-  //               ).format("MMMM YYYY")}
-  //             </Text>
-  //           </Group>
-  //         </div>
-  //       </Group>
-  //       <Group wrap="nowrap" gap={8}>
-  //         <ActionIcon color="#43A047" radius={"xl"} size={"lg"}>
-  //           <MdOutlineCall color="white" />
-  //         </ActionIcon>
-  //         <Button
-  //           variant="filled"
-  //           color="#E53935"
-  //           size="xs"
-  //           radius={"xl"}
-  //           fw={500}
-  //         >
-  //           Unemploy
-  //         </Button>
-  //       </Group>
-  //     </Group>
-  //   </Paper>
-  // ));
+  
   return (
     <div>
-      <AuthModal
-        opened={authModalStatus}
-        onClose={() => {
-          openAuthModal(false);
-        }}
-      />
-      <Space h="md" />
+      
       <Group wrap="wrap" justify="space-between" align="start">
         <Group justify="start">
           <UnstyledButton onClick={() => navigate(-1)}>

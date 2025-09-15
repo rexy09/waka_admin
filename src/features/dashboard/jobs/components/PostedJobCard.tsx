@@ -15,34 +15,20 @@ import { IoTimeOutline } from "react-icons/io5";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
 import { Icons } from "../../../../common/icons";
-import AuthModal from "../../../auth/components/AuthModal";
 import { IJobPost } from "../types";
 interface Props {
   job: IJobPost;
 }
 export default function PostedJobCard({ job }: Props) {
   const navigate = useNavigate();
-  // const isAuthenticated = useIsAuthenticated();
-  // const authUser = useAuthUser<IUser>();
-  // const { isJobSaved, saveJob, unsaveJob } = useJobServices();
 
-  // const [isSaved, setIsSaved] = useState(false);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [checkingStatus, setCheckingStatus] = useState(false);
-  const [authModalStatus, openAuthModal] = useState(false);
 
-  
 
 
 
   return (
     <>
-      <AuthModal
-        opened={authModalStatus}
-        onClose={() => {
-          openAuthModal(false);
-        }}
-      />
+
       <div className="group relative mx-auto w-[100%] overflow-hidden rounded-[13px] bg-white-300 p-[1px] transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#151F42] hover:via-[#170645] hover:to-[#044299]">
         <div className="group-hover:animate-spin-slow invisible absolute -top-40 -bottom-40 left-10 right-10 bg-gradient-to-r from-transparent via-white/90 to-transparent group-hover:visible"></div>
 
@@ -50,7 +36,7 @@ export default function PostedJobCard({ job }: Props) {
           <Card
             p={"md"}
             radius={"12px"}
-            
+
           >
             <Group wrap="nowrap" align="start">
               <div className="w-[100%]">
@@ -78,7 +64,7 @@ export default function PostedJobCard({ job }: Props) {
 
                     <Menu.Dropdown>
                       <Menu.Item onClick={() => {
-                        navigate("/jobs/" + job.id +"/posted");
+                        navigate("/jobs/" + job.id + "/posted");
                       }}>View Job</Menu.Item>
                       <Menu.Item>View Applications</Menu.Item>
                       <Menu.Item>View Bids</Menu.Item>

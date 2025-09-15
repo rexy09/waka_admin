@@ -1,6 +1,6 @@
 import { Burger, Group, Image, Select } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import mainLogo from "../../../../assets/sana_logo.svg";
+import mainLogo from "../../../../assets/logo.svg";
 import { Icons } from "../../../icons";
 import { Color } from "../../../theme";
 import AccountMenu from "./components/AccountMenu";
@@ -12,27 +12,10 @@ type Props = {
 };
 export default function HeaderMenu({ opened, setOpened }: Props) {
   const navigate = useNavigate();
-  const routesByRights = {
-    sender: [{ value: '/post_cargo', label: 'Post Cargo' }],
-    owner: [
-      { value: '/company', label: 'Company' },
-      { value: '/jobs', label: 'Jobs' },
-      { value: '/settings?tab=second', label: 'Company Settings' },
-    ],
-    general: [
-      { value: '/', label: 'Dashboard' },
-      { value: '/tracking', label: 'Tracking' },
-      { value: '/bids', label: 'Bids' },
-      { value: '/documents', label: 'Documents' },
-      { value: '/eve', label: 'Eve' },
-      { value: '/billing', label: 'Billing' },
-      { value: '/reports', label: 'Reports' },
-      { value: '/settings', label: 'Profile Settings' },
-    ],
-  };
+
 
   return (
-    <Group h="100%" justify="space-between" bg={"white"} p={"md"}>
+    <Group h="100%" justify="space-between" bg={"white"} p={"md"} style={{boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)'}}>
       <Group hiddenFrom="md">
         <Group>
           <Image radius="md" w={"130px"} src={mainLogo} alt="logo image" />
@@ -51,7 +34,7 @@ export default function HeaderMenu({ opened, setOpened }: Props) {
           searchable
           clearable
           data={[
-            ...routesByRights.general
+           
           ]}
           onChange={(value) => {
             navigate(value ?? "/");

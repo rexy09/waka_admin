@@ -6,75 +6,38 @@ import {
   Grid,
   Group,
   Image,
-  Modal,
   NumberFormatter,
   SimpleGrid,
   Space,
   Spoiler,
-  Text,
+  Text
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import useIsAuthenticated from "react-auth-kit/hooks/useIsAuthenticated";
 import { FaMoneyBills } from "react-icons/fa6";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdBusinessCenter, MdVerified } from "react-icons/md";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useParams } from "react-router-dom";
-import AuthModal from "../../../auth/components/AuthModal";
 import { IUser } from "../../../auth/types";
-import AppleSigninButton from "../../../auth/ui/AppleSigninButton";
-import GoogleSigninButton from "../../../auth/ui/GoogleSigninButton";
+import { timestampToISO } from "../../../hooks/utils";
 import { JobDetailsCardSkeleton } from "../components/Loaders";
 import { useJobServices } from "../services";
 import { IJobApplication, IJobPost } from "../types";
-import { timestampToISO } from "../../../hooks/utils";
 
 export default function AppliedJobDetails() {
-  const isAuthenticated = useIsAuthenticated();
   const authUser = useAuthUser<IUser>();
 
-  const { getJob, postJobApplication, getAppliedJob } = useJobServices();
+  const { getJob, getAppliedJob } = useJobServices();
   const { id } = useParams();
 
   const [isLoading, setIsLoading] = useState(false);
   const [job, setJob] = useState<IJobPost>();
-  const [applicationModalOpen, setApplicationModalOpen] = useState(false);
-  const [coverLetter, setCoverLetter] = useState("");
-  const [isApplying, setIsApplying] = useState(false);
   const [applied, setHasApplied] = useState<IJobApplication>();
   const [checkingApplication, setCheckingApplication] = useState(false);
-  const [authModalStatus, openAuthModal] = useState(false);
 
-  const handleJobApplication = async () => {
-    if (!job) return;
-
-    setIsApplying(true);
-
-    try {
-      await postJobApplication(job.id, coverLetter);
-
-      setIsApplying(false);
-      setApplicationModalOpen(false);
-      setCoverLetter("");
-
-      notifications.show({
-        color: "green",
-        title: "Success",
-        message: "Your application has been submitted successfully!",
-      });
-    } catch (error) {
-      setIsApplying(false);
-      console.error("Error applying for job:", error);
-      notifications.show({
-        color: "red",
-        title: "Error",
-        message: "Failed to apply for the job. Please try again later.",
-      });
-    }
-  };
 
   const checkUserApplication = async () => {
     if (!job || !authUser?.uid) return;
@@ -125,13 +88,7 @@ export default function AppliedJobDetails() {
 
   return (
     <div>
-      <AuthModal
-        opened={authModalStatus}
-        onClose={() => {
-          openAuthModal(false);
-        }}
-      />
-      <Space h="md" />
+      
       <Grid justify="center" align="start">
         <Grid.Col span={{ base: 12, md: 6, lg: 8 }}>
           {!isLoading && job ? (
@@ -382,63 +339,7 @@ export default function AppliedJobDetails() {
         </Grid.Col>
       </Grid>
 
-      {/* Job Application Modal */}
-      <Modal
-        opened={applicationModalOpen}
-        onClose={() => setApplicationModalOpen(false)}
-        title={<strong>Apply Now</strong>}
-        size="lg"
-        centered
-      >
-        <Text size="md" c="">
-          You are about to apply for:{" "}
-          <strong>{job?.title ? job.title : job?.category}</strong>
-        </Text>
-        <Space h="md" />
-        {/* <Textarea
-            label="Cover Letter (Optional)"
-            placeholder="Write a brief cover letter explaining why you're interested in this position..."
-            value={coverLetter}
-            onChange={(event) => setCoverLetter(event.currentTarget.value)}
-            minRows={6}
-            mb="lg"
-          /> */}
-        {isAuthenticated ? (
-          <Group justify="center">
-            {/* <Button 
-              variant="outline" 
-              onClick={() => {
-                setApplicationModalOpen(false);
-                setCoverLetter("");
-              }}
-              disabled={isApplying}
-              color="gray"
-            >
-              Cancel
-            </Button> */}
-            <Button
-              onClick={handleJobApplication}
-              loading={isApplying}
-              disabled={isApplying}
-            >
-              {applied ? "Already Applied" : "Submit Application"}
-            </Button>
-          </Group>
-        ) : (
-          <>
-            <Text size="md" c="dimmed" ta={"center"}>
-              You must be logged in to apply for jobs. Please log in to
-              continue.
-            </Text>
-            <Space h="md" />
-            <div className="px-20">
-              <GoogleSigninButton />
-              <Space h="md" />
-              <AppleSigninButton />
-            </div>
-          </>
-        )}
-      </Modal>
+      
     </div>
   );
 }
