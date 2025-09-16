@@ -1,17 +1,14 @@
 
 import {
-  getCountFromServer,
-  getDocs,
-  orderBy,
-  query,
-  where,
-  getAggregateFromServer,
   count,
-  limit
+  getAggregateFromServer,
+  getCountFromServer,
+  query,
+  where
 } from "firebase/firestore";
 import Env from "../../../config/env";
 import useDbService from "../../services/DbService";
-import { DashboardAnalytics, UserStatistics } from "./types";
+import { UserStatistics } from "./types";
 
 /*
  * FIREBASE OPTIMIZATION NOTES:
@@ -289,73 +286,7 @@ export const useDashboardServices = () => {
     }
   };
 
-  const getDashboardAnalytics = async (): Promise<DashboardAnalytics> => {
-    const cacheKey = getCacheKey('dashboard_analytics', { isProduction: Env.isProduction });
-    
-    // Try to get from cache first
-    const cachedData = getFromCache<DashboardAnalytics>(cacheKey);
-    if (cachedData) {
-      return cachedData;
-    }
 
-    try {
-      const startTime = Date.now();
-      console.log('Fetching dashboard analytics from Firebase...');
-      
-      // Further optimize: Get only the last 3 months and limit results
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-      const userJobsQuery = query(
-        jobPostsRef,
-        where("isProduction", "==", Env.isProduction),
-        where("datePosted", ">=", threeMonthsAgo.toISOString()),
-        orderBy("datePosted", "desc"),
-        limit(100) // Limit to prevent excessive reads
-      );
-      const userJobsSnapshot = await getDocs(userJobsQuery);
-
-      const monthlyData: { [key: string]: { jobs: number } } = {};
-
-      // Process jobs for monthly trends only
-      for (const jobDoc of userJobsSnapshot.docs) {
-        const jobData = jobDoc.data();
-        const datePosted = new Date(jobData.datePosted);
-        const monthKey = datePosted.toLocaleString('default', { month: 'short' });
-
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { jobs: 0 };
-        }
-        monthlyData[monthKey].jobs++;
-      }
-
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const jobsData = months.map(month => monthlyData[month]?.jobs || 0);
-
-      const result: DashboardAnalytics = {
-        jobPostingTrends: {
-          labels: months,
-          datasets: [{
-            label: "Jobs Posted",
-            data: jobsData,
-            backgroundColor: "#4968D5",
-            borderColor: "#26366F"
-          }]
-        }
-      };
-
-      const responseTime = Date.now() - startTime;
-      console.log(`Analytics fetched in ${responseTime}ms, processed ${userJobsSnapshot.docs.length} jobs`);
-
-      // Cache the result with longer TTL for analytics
-      setCache(cacheKey, result, CACHE_TTL.ANALYTICS);
-      
-      return result;
-    } catch (error) {
-      console.error("Error fetching dashboard analytics:", error);
-      throw error;
-    }
-  };
 
 
 
@@ -363,7 +294,6 @@ export const useDashboardServices = () => {
     getUserStatistics,
     getBasicStatistics,
     getLightweightStats,
-    getDashboardAnalytics,
     // Cache management functions
     clearCache,
     clearStatsCache: () => clearCache('stats'),

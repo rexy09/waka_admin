@@ -1,6 +1,5 @@
 import {
   Container,
-  Grid,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -16,17 +15,14 @@ import {
   FaUserShield
 } from "react-icons/fa6";
 import { useDashboardServices } from "../services";
-import { DashboardAnalytics, UserStatistics } from "../types";
-import AnalyticsCharts from "./AnalyticsCharts";
+import { UserStatistics } from "../types";
 import StatisticsCard from "./StatisticsCard";
 
 export default function DashboardStatistics() {
-  const { getBasicStatistics, getDashboardAnalytics } = useDashboardServices();
+  const { getBasicStatistics } = useDashboardServices();
 
   const [basicStats, setBasicStats] = useState<Partial<UserStatistics>>();
-  const [analytics, setAnalytics] = useState<DashboardAnalytics>();
   const [isLoadingBasic, setIsLoadingBasic] = useState(false);
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
 
 
 
@@ -47,26 +43,11 @@ export default function DashboardStatistics() {
   }, []);
 
 
-  const fetchAnalytics = useCallback(async () => {
-    setIsLoadingAnalytics(true);
-    try {
-      const data = await getDashboardAnalytics();
-      setAnalytics(data);
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-      notifications.show({
-        color: "red",
-        title: "Error Loading Analytics",
-        message: "Failed to load charts and analytics data",
-      });
-    }
-    setIsLoadingAnalytics(false);
-  }, []);
+
 
   useEffect(() => {
     fetchBasicStatistics();
-    fetchAnalytics();
-  }, [fetchBasicStatistics, fetchAnalytics]);
+  }, [fetchBasicStatistics]);
 
 
 
@@ -152,16 +133,7 @@ export default function DashboardStatistics() {
           </SimpleGrid>
         </div>
 
-        {analytics && !isLoadingAnalytics && (
-          <Grid gutter="md">
-            <Grid.Col span={{ base: 12, md: 8 }}>
-              <AnalyticsCharts
-                jobPostingTrends={analytics.jobPostingTrends}
-              />
-            </Grid.Col>
-            
-          </Grid>
-        )}
+       
 
        
       </Stack>
