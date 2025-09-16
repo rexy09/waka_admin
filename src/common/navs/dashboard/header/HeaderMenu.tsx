@@ -1,6 +1,6 @@
 import { Burger, Group, Image, Select } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import mainLogo from "../../../../assets/logo.svg";
+import mainLogo from "../../../../assets/logo_white.svg";
 import { Icons } from "../../../icons";
 import { Color } from "../../../theme";
 import AccountMenu from "./components/AccountMenu";
@@ -15,7 +15,7 @@ export default function HeaderMenu({ opened, setOpened }: Props) {
 
 
   return (
-    <Group h="100%" justify="space-between" bg={"white"} p={"md"} style={{boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)'}}>
+    <Group h="100%" justify="space-between" className="bg-[#151F42] lg:bg-white" p={"md"} style={{boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)'}}>
       <Group hiddenFrom="md">
         <Group>
           <Image radius="md" w={"130px"} src={mainLogo} alt="logo image" />
@@ -50,7 +50,7 @@ export default function HeaderMenu({ opened, setOpened }: Props) {
         
         <Group>
           <Burger
-            color={Color.PrimaryBlue}
+            color={Color.White}
             opened={opened}
             onClick={() => setOpened((o) => !o)}
             hiddenFrom="md"

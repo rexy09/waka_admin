@@ -44,7 +44,6 @@ function Sidebar({ setOpened }: SidebarProps) {
           title="Close"
           size="xl"
           iconSize={20}
-          icon={Icons.close}
           onClick={() => setOpened(true)}
         />
       </Group>
@@ -131,8 +130,8 @@ function Sidebar({ setOpened }: SidebarProps) {
               />
               <NavLinkButton
                 setOpened={setOpened}
-                to={"/support_feedback"}
-                label={"Support & Feedback"}
+                to={"/support"}
+                label={"Report  Issues"}
                 iconKey={"message"}
               />
             </Stack>
@@ -149,7 +148,7 @@ function Sidebar({ setOpened }: SidebarProps) {
               onClick={() => {
                 signOut();
                 localStorage.clear();
-                navigate("/login");
+                navigate("/signin");
               }}
             >
               <Text fz="14px" fw={500} c="#C2C2C2">
