@@ -1,10 +1,7 @@
-import { Paper, Text, Stack, Group, Badge } from "@mantine/core";
-import { FaEye, FaUser } from "react-icons/fa6";
+import { Badge, Group, Paper, Stack, Text } from "@mantine/core";
 
 interface JobPerformance {
   title: string;
-  applications: number;
-  views: number;
 }
 
 interface TopPerformingJobsProps {
@@ -30,20 +27,7 @@ export default function TopPerformingJobs({ jobs }: TopPerformingJobsProps) {
                   <Text fw={500} lineClamp={1}>
                     {job.title}
                   </Text>
-                  <Group gap="lg" mt="xs">
-                    <Group gap="xs">
-                      <FaUser size="0.8rem" color="#26366F" />
-                      <Text size="sm" c="dimmed">
-                        {job.applications} applications
-                      </Text>
-                    </Group>
-                    <Group gap="xs">
-                      <FaEye size="0.8rem" color="#4968D5" />
-                      <Text size="sm" c="dimmed">
-                        {job.views} views
-                      </Text>
-                    </Group>
-                  </Group>
+                  
                 </div>
                 <Badge
                   color={index === 0 ? "yellow" : index === 1 ? "gray" : "orange"}

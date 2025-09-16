@@ -315,39 +315,22 @@ export const useDashboardServices = () => {
       );
       const userJobsSnapshot = await getDocs(userJobsQuery);
 
-      const monthlyData: { [key: string]: { jobs: number; applications: number } } = {};
-      const jobPerformance: { title: string; applications: number; views: number }[] = [];
+      const monthlyData: { [key: string]: { jobs: number } } = {};
 
-      // Process jobs without making individual application queries
+      // Process jobs for monthly trends only
       for (const jobDoc of userJobsSnapshot.docs) {
         const jobData = jobDoc.data();
         const datePosted = new Date(jobData.datePosted);
         const monthKey = datePosted.toLocaleString('default', { month: 'short' });
 
         if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { jobs: 0, applications: 0 };
+          monthlyData[monthKey] = { jobs: 0 };
         }
         monthlyData[monthKey].jobs++;
-
-        // Use cached application count from job document if available
-        // This should be maintained via Cloud Functions when applications are created/deleted
-        const applicationsCount = jobData.applicationCount || 0;
-        monthlyData[monthKey].applications += applicationsCount;
-
-        jobPerformance.push({
-          title: jobData.title || jobData.category || "Untitled Job",
-          applications: applicationsCount,
-          views: jobData.views || 0
-        });
       }
 
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       const jobsData = months.map(month => monthlyData[month]?.jobs || 0);
-      const applicationsData = months.map(month => monthlyData[month]?.applications || 0);
-
-      const topPerformingJobs = jobPerformance
-        .sort((a, b) => b.applications - a.applications)
-        .slice(0, 3);
 
       const result: DashboardAnalytics = {
         jobPostingTrends: {
@@ -358,17 +341,7 @@ export const useDashboardServices = () => {
             backgroundColor: "#4968D5",
             borderColor: "#26366F"
           }]
-        },
-        applicationsByMonth: {
-          labels: months,
-          datasets: [{
-            label: "Applications Received",
-            data: applicationsData,
-            backgroundColor: "#26366F",
-            borderColor: "#4968D5"
-          }]
-        },
-        topPerformingJobs
+        }
       };
 
       const responseTime = Date.now() - startTime;

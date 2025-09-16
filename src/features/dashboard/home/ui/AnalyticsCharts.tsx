@@ -4,22 +4,17 @@ import { ChartData } from "../types";
 
 interface AnalyticsChartsProps {
   jobPostingTrends: ChartData;
-  applicationsByMonth: ChartData;
 }
 
 export default function AnalyticsCharts({
   jobPostingTrends,
-  applicationsByMonth,
 }: AnalyticsChartsProps) {
   const jobsChartData = jobPostingTrends.labels.map((label, index) => ({
     month: label,
     jobs: jobPostingTrends.datasets[0].data[index],
   }));
 
-  const applicationsChartData = applicationsByMonth.labels.map((label, index) => ({
-    month: label,
-    applications: applicationsByMonth.datasets[0].data[index],
-  }));
+
 
   return (
     <Stack gap="md">
@@ -36,18 +31,7 @@ export default function AnalyticsCharts({
         />
       </Paper>
 
-      <Paper withBorder p="md" radius="md">
-        <Text fw={600} mb="md">
-          Applications by Month
-        </Text>
-        <BarChart
-          h={300}
-          data={applicationsChartData}
-          dataKey="month"
-          series={[{ name: "applications", color: "#26366F" }]}
-          tickLine="y"
-        />
-      </Paper>
+      
     </Stack>
   );
 }

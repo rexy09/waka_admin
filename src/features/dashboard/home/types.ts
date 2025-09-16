@@ -30,10 +30,4 @@ export interface ChartData {
 
 export interface DashboardAnalytics {
   jobPostingTrends: ChartData;
-  applicationsByMonth: ChartData;
-  topPerformingJobs: {
-    title: string;
-    applications: number;
-    views: number;
-  }[];
 }

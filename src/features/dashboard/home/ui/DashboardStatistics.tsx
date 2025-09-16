@@ -19,7 +19,6 @@ import { useDashboardServices } from "../services";
 import { DashboardAnalytics, UserStatistics } from "../types";
 import AnalyticsCharts from "./AnalyticsCharts";
 import StatisticsCard from "./StatisticsCard";
-import TopPerformingJobs from "./TopPerformingJobs";
 
 export default function DashboardStatistics() {
   const { getBasicStatistics, getDashboardAnalytics } = useDashboardServices();
@@ -72,7 +71,7 @@ export default function DashboardStatistics() {
 
 
 
-  const statSkeletons = Array.from({ length: 12 }, (_, index) => (
+  const statSkeletons = Array.from({ length: 6 }, (_, index) => (
     <Skeleton key={index} height={120} radius="md" />
   ));
 
@@ -158,12 +157,9 @@ export default function DashboardStatistics() {
             <Grid.Col span={{ base: 12, md: 8 }}>
               <AnalyticsCharts
                 jobPostingTrends={analytics.jobPostingTrends}
-                applicationsByMonth={analytics.applicationsByMonth}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <TopPerformingJobs jobs={analytics.topPerformingJobs} />
-            </Grid.Col>
+            
           </Grid>
         )}
 
