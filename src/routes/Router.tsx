@@ -15,6 +15,7 @@ import MyJobsPage from "../pages/dashboard/MyJobsPage";
 import PostedJobDetailsPage from "../pages/dashboard/PostedJobDetailsPage";
 import PostJobPage from "../pages/dashboard/PostJobPage";
 import ProfilePage from "../pages/dashboard/ProfilePage";
+import UsersPage from "../pages/dashboard/UsersPage";
 import { NotFound } from "../pages/NotFound";
 import DashboardLayout from "../common/layouts/DashboardLayout";
 export const router = createBrowserRouter(
@@ -39,6 +40,7 @@ export const router = createBrowserRouter(
         <Route index path="/my_jobs/:id/applied" element={<AppliedJobDetailsPage />} />
         <Route index path="/my_jobs/:id/posted" element={<PostedJobDetailsPage />} />
         <Route index path="/profile" element={<ProfilePage />} />
+        <Route index path="/users" element={<UsersPage />} />
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="/signin" element={<LoginPage />} />

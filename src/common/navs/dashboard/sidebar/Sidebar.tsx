@@ -82,6 +82,13 @@ function Sidebar({ setOpened }: SidebarProps) {
 
               <NavLinkButton
                 setOpened={setOpened}
+                to={"/users"}
+                label={"Users"}
+                iconKey={"people"}
+              />
+
+              <NavLinkButton
+                setOpened={setOpened}
                 to={"/manage_users"}
                 label={"Manage Users"}
                 iconKey={"people"}

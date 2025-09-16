@@ -49,10 +49,7 @@ function LoginForm() {
     signInWithEmailAndPassword(auth, form.values.username, form.values.password)
       .then(async (userCredential) => {
         setSubmitted(false);
-        // Signed in
-        console.log("userCredential", userCredential);
         const user = userCredential.user;
-        console.log("user", user);
         if (user) {
           const accessToken = await user.getIdToken();
           if (
