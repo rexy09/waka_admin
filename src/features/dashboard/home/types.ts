@@ -1,15 +1,9 @@
 export interface UserStatistics {
   totalJobsPosted: number;
-  totalJobsApplied: number;
   activeJobPosts: number;
-  totalViews: number;
-  totalApplications: number;
-  hiredCandidates: number;
   profileViews: number;
-  responseRate: number;
   totalUsers: number;
   verifiedUsers: number;
-  newUsersThisMonth: number;
   activeUsers: number;
 }
 
