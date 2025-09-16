@@ -1,8 +1,9 @@
-import { Avatar, Badge, Group, Table, Text } from "@mantine/core";
+import { Avatar, Group, Table, Text } from "@mantine/core";
 import { DocumentSnapshot } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import { CustomTable } from "../../../../common/components/Table/CustomTable";
 import { IUser } from "../../../auth/types";
+import CustomBadge from "../components/CustomBadge";
 import UserFilters from "../components/UserFilters";
 import { useUserServices } from "../services";
 import { UserFilterParameters } from "../types";
@@ -82,6 +83,7 @@ export default function UsersTable() {
             }}>User</Table.Th>
             <Table.Th>Email</Table.Th>
             <Table.Th>Role</Table.Th>
+            <Table.Th>User Type</Table.Th>
             <Table.Th>Status</Table.Th>
             <Table.Th>Verified</Table.Th>
             <Table.Th >Environment</Table.Th>
@@ -96,7 +98,7 @@ export default function UsersTable() {
     const rows = users.map((user) => (
         <Table.Tr key={user.id}>
             <Table.Td>
-                <Group gap="sm">
+                <Group gap="sm" wrap="nowrap">
                     <Avatar src={user.avatarURL} size={30} radius="xl">
                         {user.fullName?.charAt(0)?.toUpperCase()}
                     </Avatar>
@@ -108,41 +110,43 @@ export default function UsersTable() {
             <Table.Td>
                 <Text size="sm">{user.email}</Text>
             </Table.Td>
-            <Table.Td>
-                <Badge
-                    color={user.role === "admin" ? "red" : "blue"}
-                    variant="light"
-                    size="sm"
-                >
-                    {user.role}
-                </Badge>
+            <Table.Td style={{ minWidth: '80px' }}>
+                <div className="min-w-[60px] flex justify-center">
+                    <CustomBadge variant={user.role === "admin" ? "error" : "primary"} size="sm">
+                        {user.role}
+                    </CustomBadge>
+                </div>
             </Table.Td>
-            <Table.Td>
-                <Badge
-                    color={user.status === "active" ? "green" : "gray"}
-                    variant="light"
-                    size="sm"
-                >
-                    {user.status || "active"}
-                </Badge>
+            <Table.Td style={{ minWidth: '100px' }}>
+                <div className="min-w-[80px] flex justify-center">
+                    <CustomBadge
+                        variant={user.userType === "employer" ? "purple" : user.userType === "jobseeker" ? "orange" : "secondary"}
+                        size="sm"
+                    >
+                        {user.userType || "unknown"}
+                    </CustomBadge>
+                </div>
             </Table.Td>
-            <Table.Td>
-                <Badge
-                    color={user.isVerified ? "green" : "red"}
-                    variant="light"
-                    size="sm"
-                >
-                    {user.isVerified ? "Verified" : "Unverified"}
-                </Badge>
+            <Table.Td style={{ minWidth: '80px' }}>
+                <div className="min-w-[60px] flex justify-center">
+                    <CustomBadge variant={user.status === "active" ? "success" : "secondary"} size="sm">
+                        {user.status || "active"}
+                    </CustomBadge>
+                </div>
             </Table.Td>
-            <Table.Td>
-                <Badge
-                    color={user.isProduction ? "green" : "red"}
-                    variant="light"
-                    size="sm"
-                >
-                    {user.isProduction ? "Production" : "Staging"}
-                </Badge>
+            <Table.Td style={{ minWidth: '100px' }}>
+                <div className="min-w-[80px] flex justify-center">
+                    <CustomBadge variant={user.isVerified ? "success" : "error"} size="sm">
+                        {user.isVerified ? "Verified" : "Unverified"}
+                    </CustomBadge>
+                </div>
+            </Table.Td>
+            <Table.Td style={{ minWidth: '100px' }}>
+                <div className="min-w-[80px] flex justify-center">
+                    <CustomBadge variant={user.isProduction ? "success" : "error"} size="sm">
+                        {user.isProduction ? "Production" : "Staging"}
+                    </CustomBadge>
+                </div>
             </Table.Td>
             <Table.Td>
                 <Text size="sm">{user.country?.name || "-"}</Text>
@@ -176,7 +180,7 @@ export default function UsersTable() {
             <CustomTable
                 columns={columns}
                 rows={rows}
-                colSpan={8}
+                colSpan={9}
                 totalData={totalUsers}
                 isLoading={isLoading}
                 title="Users"
