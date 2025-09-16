@@ -1,14 +1,13 @@
 import {
   Button,
   CloseButton,
-  Divider,
   Group,
   Image,
   Paper,
   ScrollArea,
   Space,
   Stack,
-  Text,
+  Text
 } from "@mantine/core";
 
 import mainLogo from "../../../../assets/logo_white.svg";
@@ -18,9 +17,9 @@ import useSignOut from "react-auth-kit/hooks/useSignOut";
 import { useNavigate } from "react-router-dom";
 import { Icons } from "../../../icons";
 import { Color } from "../../../theme";
+import AccountMenu from "../header/components/AccountMenu";
 import classes from "./sidenav.module.css";
 import NavLinkButton from "./ui/NavLinkButton";
-import AccountMenu from "../header/components/AccountMenu";
 
 type SidebarProps = {
   opened: boolean;
@@ -59,9 +58,8 @@ function Sidebar({ setOpened }: SidebarProps) {
             <Group  justify="center">
               <Image w={"200px"} src={mainLogo} alt="logo image" />
             </Group>
-            <Divider my={"md"} />
 
-            {/* <Space h="lg" /> */}
+            <Space h="lg" />
             <Stack align="stretch" justify="flex-start" gap="xs">
               <Group hiddenFrom="md" mb={"md"}>
                 <Paper p={"md"} radius="md" w={"100%"}>
@@ -86,12 +84,6 @@ function Sidebar({ setOpened }: SidebarProps) {
                 iconKey={"people"}
               />
 
-              <NavLinkButton
-                setOpened={setOpened}
-                to={"/manage_users"}
-                label={"Manage Users"}
-                iconKey={"people"}
-              />
               
               <NavLinkButton
                 setOpened={setOpened}
@@ -137,9 +129,6 @@ function Sidebar({ setOpened }: SidebarProps) {
             </Stack>
             <Space h="md" />
 
-            <Divider  />
-            
-            <Space h="md" />
 
             <Button
               leftSection={Icons.logout}

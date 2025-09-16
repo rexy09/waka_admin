@@ -1,12 +1,9 @@
 import { ActionIcon, Indicator } from "@mantine/core";
 
-import { useEffect, useState } from "react";
-import { Icons } from "../../../../icons";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotificationStore } from "../../../../../features/dashboard/notifications/stores";
-import { useNotificationServices } from "../../../../../features/dashboard/notifications/services";
-import { PaginatedResponse } from "../../../../../features/dashboard/home/types";
-import { INotification } from "../../../../../features/dashboard/notifications/types";
+import { Icons } from "../../../../icons";
 
 type Props = {
   setOpened?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,37 +12,11 @@ export default function NotificationMenu({ setOpened }: Props) {
   const navigate = useNavigate();
 
   const notificationStore = useNotificationStore();
-  const [_isLoading, setIsLoading] = useState(false);
 
-  const [_userMenuOpened, _setUserMenuOpened] = useState(false);
-  const { getUreadNotifications } = useNotificationServices();
-  const [_unreadNotificationResponse, setUreadNotificationResponse] =
-    useState<PaginatedResponse<INotification>>();
+ 
 
   const fetchtUreadNotifications = () => {
-    getUreadNotifications(notificationStore.isRead)
-      .then((response) => {
-        setIsLoading(false);
-        const data = response.data as PaginatedResponse<INotification>;
-        setUreadNotificationResponse(data);
-        if (notificationStore.isRead == undefined) {
-          notificationStore.updateText("count", data.count.toString());
-          notificationStore.updateText("readCount", data.count);
-        } else if (notificationStore.isRead == false) {
-          notificationStore.updateText("count", data.count.toString());
-          notificationStore.updateText("readCount", data.count);
-        } else {
-          notificationStore.updateText("readCount", data.count);
-        }
-      })
-      .catch((_error) => {
-        setIsLoading(false);
-        // notifications.show({
-        //   color: "red",
-        //   title: "Error",
-        //   message: "Something went wrong!",
-        // });
-      });
+    
   };
 
   useEffect(() => {

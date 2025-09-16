@@ -1,48 +1,19 @@
 import { Group, Space, Text } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
-import { PaginatedResponse } from "../../home/types";
-import { useNotificationServices } from "../services";
+import { useNotificationStore } from "../stores";
 import { INotification } from "../types";
 import NotificationSection from "./NotificationSection";
-import { useNotificationStore } from "../stores";
 
 export default function Notifications() {
-  const { getNotifications } = useNotificationServices();
   const [isLoading, setIsLoading] = useState(false);
-  const [_notificationResponse, setNotificationResponse] =
-    useState<PaginatedResponse<INotification>>();
+
 
   const [sanaNotifications, setNotifications] = useState<INotification[]>([]);
-  const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const notificationStore = useNotificationStore();
-  const fetchData = (pageNum: number) => {
+  const fetchData = () => {
     setIsLoading(true);
-    getNotifications(pageNum, notificationStore.isRead)
-      .then((response) => {
-        setIsLoading(false);
-        const data = response.data as PaginatedResponse<INotification>;
-        setNotificationResponse(data);
-        setNotifications((prev) => [...prev, ...data.results]);
-        setHasMore(pageNum < Math.ceil(data.count / 10));
-      })
-      .catch((error) => {
-        setIsLoading(false);
-
-        if (
-          error.response.data.detail == "Invalid page." &&
-          error.response.status == 404
-        ) {
-          return;
-        } else {
-          notifications.show({
-            color: "red",
-            title: "Error",
-            message: "Something went wrong!",
-          });
-        }
-      });
+    
   };
 
   const fetchtNotifications = () => {
@@ -51,7 +22,7 @@ export default function Notifications() {
   };
 
   useEffect(() => {
-    fetchData(page);
+    fetchData();
   }, [page, notificationStore.isRead]);
 
   return (
@@ -65,7 +36,7 @@ export default function Notifications() {
       <NotificationSection
         data={sanaNotifications}
         isLoading={isLoading}
-        hasMore={hasMore}
+        hasMore={false}
         setPage={setPage}
         setNotifications={setNotifications}
         fetchtNotifications={fetchtNotifications}

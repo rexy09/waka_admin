@@ -15,10 +15,8 @@ import { useEffect, useRef } from "react";
 import { Icons } from "../../../../common/icons";
 import { Color } from "../../../../common/theme";
 import { OrderSkeleton } from "../components/Loaders";
-import { INotification } from "../types";
-import { useNotificationServices } from "../services";
-import { notifications } from "@mantine/notifications";
 import { useNotificationStore } from "../stores";
+import { INotification } from "../types";
 
 interface Props {
   data: INotification[];
@@ -33,12 +31,10 @@ export default function NotificationSection({
   isLoading,
   hasMore,
   setPage,
-  setNotifications,
   fetchtNotifications,
 }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
-  const { readNotification } = useNotificationServices();
   const notificationStore = useNotificationStore();
 
   useEffect(() => {
@@ -66,31 +62,9 @@ export default function NotificationSection({
   const orderSkeletons = Array(4)
     .fill(0)
     .map((_, index) => <OrderSkeleton key={index} />);
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, is_read: true }
-          : notification
-      )
-    );
-  };
+  
 
-  const updateReadNotification = (notificationId: number) => {
-    readNotification(notificationId)
-      .then((_response) => {
-        markAsRead(notificationId);
-        notificationStore.inc();
-      })
-      .catch((_error) => {
-        console.log(_error);
-        notifications.show({
-          color: "red",
-          title: "Error",
-          message: "Something went wrong!",
-        });
-      });
-  };
+
 
   return (
     <>
@@ -145,7 +119,6 @@ export default function NotificationSection({
                 w={"100%"}
                 onClick={() => {
                   if (item.is_read ==false) {
-                    updateReadNotification(item.id);
                   }
                 }}
               >

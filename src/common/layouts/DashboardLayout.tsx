@@ -6,29 +6,20 @@ import { useEffect } from "react";
 import { Outlet, ScrollRestoration } from "react-router-dom";
 import Env from "../../config/env";
 import { messaging } from "../../config/firebase";
-import useAuthServices from "../../features/auth/services";
 import DasboardFooter from "../navs/dashboard/footer/DasboardFooter";
 import HeaderMenu from "../navs/dashboard/header/HeaderMenu";
 import Sidebar from "../navs/dashboard/sidebar/Sidebar";
 
 export default function DashboardLayout() {
-
   const [opened, { toggle }] = useDisclosure();
-  const { updateUserDevice } = useAuthServices();
   async function requestPermission() {
-    //requesting permission using Notification API
     const permission = await Notification.requestPermission();
 
     if (permission === "granted") {
-      const token = await getToken(messaging, {
+      await getToken(messaging, {
         vapidKey: Env.APP_VAPID_KEY,
       });
-      await updateUserDevice(token);
-
-     
-      // console.log("Token generated : ", token);
     } else if (permission === "denied") {
-      //notifications are blocked
       alert("You denied for the notification");
     }
   }
@@ -59,7 +50,7 @@ export default function DashboardLayout() {
           <Outlet />
           <ScrollRestoration />
         </Box>
-        
+
         <DasboardFooter />
       </AppShell.Main>
     </AppShell>
