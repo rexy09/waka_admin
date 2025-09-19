@@ -1,14 +1,13 @@
 import {
-    Avatar,
-    Badge,
-    Button,
-    Group,
-    Modal,
-    Paper,
-    Stack,
-    Table,
-    Text,
-    Tooltip,
+  Avatar,
+  Badge,
+  Button,
+  Group,
+  Modal,
+  Paper,
+  Stack,
+  Table,
+  Text
 } from "@mantine/core";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -136,7 +135,7 @@ export default function UsersTable() {
         User
       </Table.Th>
       <Table.Th>Email</Table.Th>
-      <Table.Th>Phone</Table.Th>
+      {/* <Table.Th>Phone</Table.Th> */}
       <Table.Th>Role</Table.Th>
       <Table.Th>User Type</Table.Th>
       <Table.Th>Status</Table.Th>
@@ -169,7 +168,7 @@ export default function UsersTable() {
       <Table.Td>
         <Text size="sm">{user.email}</Text>
       </Table.Td>
-      <Table.Td style={{ minWidth: "120px" }}>
+      {/* <Table.Td style={{ minWidth: "120px" }}>
         <div className="flex items-center space-x-2">
           <Text size="sm" className="font-medium text-gray-700">
             {user.phoneNumber || "-"}
@@ -185,7 +184,7 @@ export default function UsersTable() {
             </Tooltip>
           )}
         </div>
-      </Table.Td>
+      </Table.Td> */}
       <Table.Td style={{ minWidth: "80px" }}>
         <div className="min-w-[60px] flex justify-center">
           <CustomBadge
