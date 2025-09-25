@@ -10,7 +10,7 @@ import {
   SimpleGrid,
   Space,
   Spoiler,
-  Text
+  Text,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import moment from "moment";
@@ -22,30 +22,17 @@ import { MdBusinessCenter, MdVerified } from "react-icons/md";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useParams } from "react-router-dom";
 import { timestampToISO } from "../../../hooks/utils";
-import JobCard from "../components/JobCard";
-import { JobCardSkeleton, JobDetailsCardSkeleton } from "../components/Loaders";
+import { JobDetailsCardSkeleton } from "../components/Loaders";
 import SearchModal from "../components/SearchModal";
 import { useJobServices } from "../services";
-import { IJobPost, PaginatedResponse } from "../types";
+import { IJobPost } from "../types";
 
 export default function JobDetails() {
-
-  const {
-    getJob,
-    getRelatedJobs,
-  } = useJobServices();
+  const { getJob } = useJobServices();
   const { id } = useParams();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [_loadingJobs, setLoadingJobs] = useState(false);
-  const [jobs, setJobs] = useState<PaginatedResponse<IJobPost>>();
+  const [_isLoading, setIsLoading] = useState(false);
   const [job, setJob] = useState<IJobPost>();
-
-
-
-
-
-
 
   const fetchData = () => {
     setIsLoading(true);
@@ -64,66 +51,27 @@ export default function JobDetails() {
         });
       });
   };
-  const fetchRelatedJobs = (next?: string) => {
-    setLoadingJobs(true);
 
-    getRelatedJobs(job?.category!, id!, next, jobs?.lastDoc, jobs?.firstDoc)
-      .then((response) => {
-        setLoadingJobs(false);
-        setJobs(response);
-      })
-      .catch((_error) => {
-        setLoadingJobs(false);
-        notifications.show({
-          color: "red",
-          title: "Error",
-          message: "Something went wrong!",
-        });
-      });
-  };
   useEffect(() => {
     fetchData();
   }, [id]);
-  useEffect(() => {
-    if (job) {
-      fetchRelatedJobs();
-    }
-  }, [job]);
 
-  const skeletons = Array.from({ length: 6 }, (_, index) => (
-    <JobCardSkeleton key={index} />
-  ));
-  const cards = jobs?.data.map((item, index) => (
-    <JobCard job={item} key={index} />
-  ));
   const openGoogleMaps = () => {
-    window.open(`https://maps.google.com?q=${job?.location.latitude},${job?.location.longitude} (${encodeURIComponent(job?.location.address ?? "")})`, '_blank');
+    window.open(
+      `https://maps.google.com?q=${job?.location.latitude},${
+        job?.location.longitude
+      } (${encodeURIComponent(job?.location.address ?? "")})`,
+      "_blank"
+    );
   };
- 
-  
+
   return (
     <div>
-      
-
       <Paper p={"md"} radius={"md"}>
         <SearchModal />
       </Paper>
       <Space h="md" />
       <Grid>
-        <Grid.Col span={{ base: 12, md: 6, lg: 4 }} order={{ base: 2, md: 1 }}>
-          <Group justify="space-between" visibleFrom="md">
-            <Text size="28px" fw={700}>
-              Related Jobs
-            </Text>
-          </Group>
-          <Space h="md" />
-          <Group justify="space-between" hiddenFrom="md" mb="md">
-            <Text size="28px" fw={700}>
-              Related Jobs
-            </Text>
-          </Group>
-          <SimpleGrid cols={1}>{isLoading ? skeletons : cards}</SimpleGrid>
-        </Grid.Col>
         <Grid.Col span={{ base: 12, md: 6, lg: 8 }} order={{ base: 1, md: 2 }}>
           {job ? (
             <>
@@ -131,7 +79,6 @@ export default function JobDetails() {
                 <Text size="28px" fw={700} c="#141514">
                   Job Details
                 </Text>
-               
               </Group>
               <Space h="md" />
               <Card p={"md"} radius={"md"}>
@@ -141,10 +88,11 @@ export default function JobDetails() {
                       {job.title ? job.title : job.category}
                     </Text>
                     <div
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${job.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                        }`}
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+                        job.isActive
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
                       {job.isActive ? "Active" : "Closed"}
                     </div>
@@ -221,9 +169,7 @@ export default function JobDetails() {
                       size="sm"
                       radius="md"
                       onClick={() => openGoogleMaps()}
-                      leftSection={
-                        <FaMapMarkedAlt />
-                      }
+                      leftSection={<FaMapMarkedAlt />}
                     >
                       Open Map
                     </Button>
@@ -246,15 +192,17 @@ export default function JobDetails() {
                       </Text>
                       <Text size="16px" fw={700} c="#151F42">
                         <NumberFormatter
-                          prefix={`${job.currency ? job.currency.code : "TZS"
-                            } `}
+                          prefix={`${
+                            job.currency ? job.currency.code : "TZS"
+                          } `}
                           value={job.budget}
                           thousandSeparator
                         />
                         {job.maxBudget > 0 && (
                           <NumberFormatter
-                            prefix={` - ${job.currency ? job.currency.code : "TZS"
-                              } `}
+                            prefix={` - ${
+                              job.currency ? job.currency.code : "TZS"
+                            } `}
                             value={job.maxBudget}
                             thousandSeparator
                           />
@@ -321,11 +269,16 @@ export default function JobDetails() {
                         <IoTimeOutline size={14} color="#596258" />
                         <Text size="14px" fw={400} c="#596258">
                           Joined{" "}
-                          {job.userDateJoined ? moment(
-                            typeof job.userDateJoined === "string"
-                              ? new Date(job.userDateJoined)
-                              : timestampToISO(job.userDateJoined.seconds ?? 0, job.userDateJoined.nanoseconds ?? 0)
-                          ).format("MMMM YYYY") : "NA"}
+                          {job.userDateJoined
+                            ? moment(
+                                typeof job.userDateJoined === "string"
+                                  ? new Date(job.userDateJoined)
+                                  : timestampToISO(
+                                      job.userDateJoined.seconds ?? 0,
+                                      job.userDateJoined.nanoseconds ?? 0
+                                    )
+                              ).format("MMMM YYYY")
+                            : "NA"}
                         </Text>
                       </Group>
                       <Group wrap="nowrap" gap={3} mt={4}>
@@ -354,8 +307,6 @@ export default function JobDetails() {
           )}
         </Grid.Col>
       </Grid>
-
-      
     </div>
   );
 }

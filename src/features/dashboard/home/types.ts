@@ -2,6 +2,7 @@ export interface UserStatistics {
   totalJobsPosted: number;
   activeJobPosts: number;
   profileViews: number;
+  totalHiredJobs: number;
   totalUsers: number;
   verifiedUsers: number;
   activeUsers: number;

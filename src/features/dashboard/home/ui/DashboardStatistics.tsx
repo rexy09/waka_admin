@@ -54,8 +54,8 @@ export default function DashboardStatistics() {
         },
 
         {
-          title: "Profile Views",
-          value: basicStats.profileViews,
+          title: "Total Hired Jobs",
+          value: basicStats.totalHiredJobs,
           color: "#ef4444",
           icon: <FaHeart size="1.2rem" />,
         },

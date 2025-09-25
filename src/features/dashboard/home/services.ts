@@ -117,6 +117,7 @@ interface BasicStats {
   totalJobsPosted: number;
   activeJobPosts: number;
   profileViews: number;
+  totalHiredJobs: number;
   totalUsers: number;
   verifiedUsers: number;
   activeUsers: number;
@@ -135,7 +136,7 @@ interface BatchedQueries {
 }
 
 export const useDashboardServices = () => {
-  const { jobPostsRef, savedJobsRef, usersRef } = useDbService();
+  const { jobPostsRef, savedJobsRef, usersRef, hiredJobsRef } = useDbService();
 
   // Lightweight stats for quick dashboard previews
   const getLightweightStats = async (): Promise<LightweightStats> => {
@@ -208,6 +209,9 @@ export const useDashboardServices = () => {
           ),
           getCountFromServer(
             query(savedJobsRef, where("isProduction", "==", Env.isProduction))
+          ),
+          getCountFromServer(
+            query(hiredJobsRef, where("isProduction", "==", Env.isProduction))
           )
         ],
         userQueries: [
@@ -219,7 +223,7 @@ export const useDashboardServices = () => {
 
       // Execute batched queries in parallel
       const [
-        [jobStats, activeJobsCount, totalSavedJobs],
+        [jobStats, activeJobsCount, totalSavedJobs, totalHiredJobs],
         [totalUsers, verifiedUsers, activeUsers]
       ] = await Promise.all([
         Promise.all(batchedQueries.jobQueries),
@@ -233,9 +237,10 @@ export const useDashboardServices = () => {
         totalJobsPosted: jobStats.data().totalJobsPosted,
         activeJobPosts: activeJobsCount.data().count,
         profileViews: totalSavedJobs.data().count,
+        totalHiredJobs: totalHiredJobs.data().count,
         totalUsers: totalUsers.data().count,
         verifiedUsers: verifiedUsers.data().count,
-        activeUsers: activeUsers.data().count
+        activeUsers: activeUsers.data().count,
       };
 
       const responseTime = Date.now() - startTime;
@@ -271,6 +276,7 @@ export const useDashboardServices = () => {
         totalJobsPosted: basicStats.totalJobsPosted,
         activeJobPosts: basicStats.activeJobPosts,
         profileViews: basicStats.profileViews,
+        totalHiredJobs: basicStats.totalHiredJobs,
         totalUsers: basicStats.totalUsers,
         verifiedUsers: basicStats.verifiedUsers,
         activeUsers: basicStats.activeUsers,
