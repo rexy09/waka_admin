@@ -21,3 +21,20 @@ export interface INotification {
   created_at: string;
   updated_at: string;
 }
+
+export interface INotificationData {
+  [key: string]: any;
+}
+
+// export interface INotificationForm {
+//   title: string;
+//   body: string;
+//   country_code?: string;
+// }
+export interface INotificationForm {
+  title: string;
+  body: string;
+  user_id?: string;
+  country_code?: string;
+  data?: INotificationData;
+}

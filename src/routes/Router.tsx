@@ -18,6 +18,7 @@ import ProfilePage from "../pages/dashboard/ProfilePage";
 import UsersPage from "../pages/dashboard/UsersPage";
 import { NotFound } from "../pages/NotFound";
 import DashboardLayout from "../common/layouts/DashboardLayout";
+import NotificationCenterPage from "../pages/dashboard/NotificationCenterPage";
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -41,6 +42,7 @@ export const router = createBrowserRouter(
         <Route index path="/my_jobs/:id/posted" element={<PostedJobDetailsPage />} />
         <Route index path="/profile" element={<ProfilePage />} />
         <Route index path="/users" element={<UsersPage />} />
+        <Route index path="/notification_center" element={<NotificationCenterPage />} />
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="/signin" element={<LoginPage />} />

@@ -94,6 +94,12 @@ function Sidebar({ setOpened }: SidebarProps) {
 
               <NavLinkButton
                 setOpened={setOpened}
+                to={"/notification_center"}
+                label={"Notification Center"}
+                iconKey={"personalcard"}
+              />
+              <NavLinkButton
+                setOpened={setOpened}
                 to={"/sana_agents"}
                 label={"Agents"}
                 iconKey={"personalcard"}
@@ -124,7 +130,7 @@ function Sidebar({ setOpened }: SidebarProps) {
                 setOpened={setOpened}
                 to={"/support"}
                 label={"Report  Issues"}
-                iconKey={"message"}
+                iconKey={"messages"}
               />
             </Stack>
             <Space h="md" />
