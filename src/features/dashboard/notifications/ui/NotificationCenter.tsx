@@ -127,8 +127,9 @@ export default function NotificationCenter() {
                 <Textarea
                   label="Message"
                   placeholder="Enter your notification message"
-                  minRows={6}
-                  // maxRows={8}
+                  autosize
+                  minRows={4}
+                  maxRows={8}
                   {...form.getInputProps("body")}
                 />
 
@@ -202,12 +203,11 @@ export default function NotificationCenter() {
               <Stack gap="md">
                 <Title order={4}>Preview</Title>
 
-                <Paper p="md" radius="md" withBorder className="bg-gray-50">
-                  <Group gap="sm"  wrap="nowrap">
+                <Paper p="md" radius="md" withBorder >
+                  <Group gap="sm"  wrap="nowrap" justify="flex-start">
                     <Image
                       w={50}
                       src={logo}
-                      mx={"auto"}
                       alt="logo"
                       radius={"md"}
                     />
@@ -215,14 +215,13 @@ export default function NotificationCenter() {
                       <Text size="sm" fw={600}>
                         {form.values.title || "Notification Title"}
                       </Text>
-                      <Text size="sm" style={{ lineHeight: 1.4 }}>
+                        <Text size="sm" className="break-words overflow-hidden" >
                         {form.values.body ||
                           "Your notification message will appear here"}
                       </Text>
                     </div>
                   </Group>
                 </Paper>
-                {/* </Paper> */}
 
                 <div>
                   <Text size="xs" c="dimmed">
