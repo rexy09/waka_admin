@@ -759,7 +759,6 @@ export const useJobServices = () => {
     const hiredJobsQuery = query(
       hiredJobsRef,
       where("jobId", "==", jobId),
-      where("postedByUserId", "==", authUser?.uid),
       where("isProduction", "==", Env.isProduction)
     );
     const hiredJobsSnapshot = await getDocs(hiredJobsQuery);

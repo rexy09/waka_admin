@@ -1,8 +1,6 @@
 import {
-  ActionIcon,
   Avatar,
   Badge,
-  Button,
   Card,
   Center,
   Divider,
@@ -19,19 +17,19 @@ import {
   Stack,
   Tabs,
   Text,
-  UnstyledButton,
+  UnstyledButton
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import moment from "moment";
 import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import { FaMoneyBills } from "react-icons/fa6";
 import { IoArrowBack, IoLocationOutline, IoTimeOutline } from "react-icons/io5";
-import { MdBusinessCenter, MdOutlineCall, MdVerified } from "react-icons/md";
+import { MdBusinessCenter, MdVerified } from "react-icons/md";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useNavigate, useParams } from "react-router-dom";
-import { IUser } from "../../../auth/types";
+import { timestampToISO } from "../../../hooks/utils";
 import { JobDetailsCardSkeleton } from "../components/Loaders";
+import UserAvatar from "../components/UserAvatar";
 import { useJobServices } from "../services";
 import {
   IHiredApplication,
@@ -39,21 +37,18 @@ import {
   IJobBid,
   IJobPost,
 } from "../types";
-import UserAvatar from "../components/UserAvatar";
-import { timestampToISO } from "../../../hooks/utils";
 
 export default function PostedJobDetails() {
   const navigate = useNavigate();
 
-  const authUser = useAuthUser<IUser>();
 
   const {
     getJob,
     getJobBids,
     getJobApplications,
     getAllHiredJobApplications,
-    unemployApplicantFromJob,
-    employApplicantFromJob
+    // unemployApplicantFromJob,
+    // employApplicantFromJob
   } = useJobServices();
   const { id } = useParams();
 
@@ -66,7 +61,7 @@ export default function PostedJobDetails() {
     IHiredApplication[]
   >([]);
   const [loadingHired, setLoadingHired] = useState(false);
-  const [loadingUnemployment, setLoadingUnemployment] = useState("");
+  // const [loadingUnemployment, setLoadingUnemployment] = useState("");
   const [activeTab, setActiveTab] = useState("applicants");
 
   const tabs = [
@@ -76,33 +71,33 @@ export default function PostedJobDetails() {
 
   
 
-  const handleUnemployApplicantFromJob = async (applicantUid: string) => {
-    setLoadingUnemployment(applicantUid);
-    unemployApplicantFromJob(job?.id!, applicantUid)
-      .then((_response) => {
-        setLoadingUnemployment("");
-        fetchJobApplications();
-      })
-      .catch((error) => {
-        setLoadingUnemployment("");
-        console.log(error);
-      });
-  };
-  const handleEmployApplicantFromJob = async (applicantUid: string) => {
-    setLoadingUnemployment(applicantUid);
-    employApplicantFromJob(job?.id!, applicantUid)
-      .then((_response) => {
-        setLoadingUnemployment("");
-        fetchJobApplications();
-      })
-      .catch((error) => {
-        setLoadingUnemployment("");
-        console.log(error);
-      });
-  };
+  // const handleUnemployApplicantFromJob = async (applicantUid: string) => {
+  //   setLoadingUnemployment(applicantUid);
+  //   unemployApplicantFromJob(job?.id!, applicantUid)
+  //     .then((_response) => {
+  //       setLoadingUnemployment("");
+  //       fetchJobApplications();
+  //     })
+  //     .catch((error) => {
+  //       setLoadingUnemployment("");
+  //       console.log(error);
+  //     });
+  // };
+  // const handleEmployApplicantFromJob = async (applicantUid: string) => {
+  //   setLoadingUnemployment(applicantUid);
+  //   employApplicantFromJob(job?.id!, applicantUid)
+  //     .then((_response) => {
+  //       setLoadingUnemployment("");
+  //       fetchJobApplications();
+  //     })
+  //     .catch((error) => {
+  //       setLoadingUnemployment("");
+  //       console.log(error);
+  //     });
+  // };
 
   const fetchJobApplications = async () => {
-    if (!job || !authUser?.uid) return;
+    if (!job) return;
     setLoadingApplication(true);
     if (job.hasBidding) {
       try {
@@ -180,10 +175,10 @@ export default function PostedJobDetails() {
   }, [id]);
 
   useEffect(() => {
-    if (job && authUser?.uid) {
+    if (job ) {
       fetchJobApplications();
     }
-  }, [job, authUser?.uid]);
+  }, [job]);
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
   };
@@ -192,7 +187,7 @@ export default function PostedJobDetails() {
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={application.id}>
       <Group wrap="nowrap" align="center" justify="space-between">
         <Group wrap="nowrap" gap={"xs"}>
-          <Avatar w="50px" h="50px" radius={"xl"} src={application.avatarURL} />
+          <UserAvatar userId={application.uid} />
           <div>
             <Text size="16px" fw={500} c="#000000">
               {application.applicantName}
@@ -211,7 +206,7 @@ export default function PostedJobDetails() {
             </Group>
           </div>
         </Group>
-        {application.status != "accepted" && (
+        {/* {application.status != "accepted" && (
           <Button
             variant="filled"
             color="#151F42"
@@ -224,7 +219,7 @@ export default function PostedJobDetails() {
           >
             Employ
           </Button>
-        )}
+        )} */}
       </Group>
     </Paper>
   ));
@@ -232,14 +227,13 @@ export default function PostedJobDetails() {
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={bid.id}>
       <Group wrap="nowrap" align="center" justify="space-between">
         <Group wrap="nowrap" gap={"xs"}>
-          <Avatar w="50px" h="50px" radius={"xl"} src={job?.avatarUrl} />
+          <UserAvatar userId={bid.bidderId} />
           <div>
             <Text size="16px" fw={500} c="#000000">
               {bid.bidderName}
             </Text>
             <Space h="5px" />
             <Group wrap="nowrap" gap={3}>
-              {/* <IoTimeOutline size={14} color="#596258" /> */}
               <Text size="14px" fw={400} c="#596258">
                 Bid at{" "}
                 {moment(
@@ -266,7 +260,7 @@ export default function PostedJobDetails() {
           </div>
         </Group>
         <Stack align="end">
-          {bid.status != "accepted" && (
+          {/* {bid.status != "accepted" && (
             <Button
               variant="filled"
               color="#151F42"
@@ -277,7 +271,7 @@ export default function PostedJobDetails() {
             >
               Employ
             </Button>
-          )}
+          )} */}
         </Stack>
       </Group>
     </Paper>
@@ -322,10 +316,10 @@ export default function PostedJobDetails() {
           </div>
         </Group>
         <Group wrap="nowrap" gap={8}>
-          <ActionIcon color="#43A047" radius={"xl"} size={"lg"}>
+          {/* <ActionIcon color="#43A047" radius={"xl"} size={"lg"}>
             <MdOutlineCall color="white" />
-          </ActionIcon>
-          <Button
+          </ActionIcon> */}
+          {/* <Button
             variant="filled"
             color="#E53935"
             size="xs"
@@ -338,7 +332,7 @@ export default function PostedJobDetails() {
             }
           >
             Unemploy
-          </Button>
+          </Button> */}
         </Group>
       </Group>
     </Paper>
@@ -362,27 +356,7 @@ export default function PostedJobDetails() {
         <Grid.Col span={{ base: 12, md: 6, lg: 8 }} order={{ base: 2, md: 1 }}>
           {job ? (
             <>
-              {/* <Group wrap="wrap" justify="space-between" align="start">
-                <Text size="28px" fw={700} c="#141514">
-                  Job Details
-                </Text>
-                <Group>
-                  {applied?.status == "accepted" && (
-                    <Button
-                      variant="filled"
-                      color="#151F42"
-                      size="xs"
-                      radius={"md"}
-                      fw={500}
-                      // onClick={() => setApplicationModalOpen(true)}
-                      loading={checkingApplication}
-                    >
-                      Complete Job
-                    </Button>
-                  )}
-                </Group>
-              </Group> */}
-              {/* <Space h="md" /> */}
+              
               <Card p={"md"} radius={"md"}>
                 <div>
                   <Group justify="space-between" wrap="nowrap" align="start">
@@ -446,11 +420,7 @@ export default function PostedJobDetails() {
                     {job.description}
                   </Text>
 
-                  {/* <TypographyStylesProvider>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: job.description }}
-                  />
-                </TypographyStylesProvider> */}
+                 
                 </Spoiler>
               </Card>
               <Space h="md" />

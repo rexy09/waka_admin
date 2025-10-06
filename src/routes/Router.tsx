@@ -9,7 +9,6 @@ import LoginPage from "../pages/auth/LoginPage";
 import AppliedJobDetailsPage from "../pages/dashboard/AppliedJobDetailsPage";
 import CompleteProfilePage from "../pages/dashboard/CompleteProfilePage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
-import JobDetailsPage from "../pages/dashboard/JobDetailsPage";
 import JobsPage from "../pages/dashboard/JobsPage";
 import MyJobsPage from "../pages/dashboard/MyJobsPage";
 import PostedJobDetailsPage from "../pages/dashboard/PostedJobDetailsPage";
@@ -34,7 +33,7 @@ export const router = createBrowserRouter(
       >
         <Route index path="/" element={<DashboardPage />} />
         <Route index path="/jobs" element={<JobsPage />} />
-        <Route index path="/jobs/:id" element={<JobDetailsPage />} />
+        <Route index path="/jobs/:id" element={<PostedJobDetailsPage />} />
         <Route index path="/complete_profile" element={<CompleteProfilePage />} />
         <Route index path="/post_job" element={<PostJobPage />} />
         <Route index path="/my_jobs" element={<MyJobsPage />} />

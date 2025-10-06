@@ -26,7 +26,7 @@ export const useProfileServices = () => {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        console.log("Fetched user data:", data);
+        // console.log("Fetched user data:", data);
 
         const result = {
           id: docSnap.id,
