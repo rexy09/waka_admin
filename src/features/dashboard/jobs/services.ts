@@ -54,7 +54,6 @@ export const useJobServices = () => {
     const pageLimit: number = 6;
     const jobPostsCollection = collection(db, "jobPosts");
     const totalQueryConstraints = [
-      where("isActive", "==", true),
       where("isProduction", "==", Env.isProduction),
       orderBy("datePosted", "desc"),
     ];
@@ -81,7 +80,6 @@ export const useJobServices = () => {
     const dataCollection = collection(db, "jobPosts");
 
     const dataQueryConstraints = [
-      where("isActive", "==", true),
       where("isProduction", "==", Env.isProduction),
       orderBy("datePosted", "desc"),
     ];
