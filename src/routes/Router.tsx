@@ -14,11 +14,11 @@ import MyJobsPage from "../pages/dashboard/MyJobsPage";
 import PostedJobDetailsPage from "../pages/dashboard/PostedJobDetailsPage";
 import PostJobPage from "../pages/dashboard/PostJobPage";
 import ProfilePage from "../pages/dashboard/ProfilePage";
-import UsersPage from "../pages/dashboard/BannerPage";
 import { NotFound } from "../pages/NotFound";
 import DashboardLayout from "../common/layouts/DashboardLayout";
 import NotificationCenterPage from "../pages/dashboard/NotificationCenterPage";
 import BannerPage from "../pages/dashboard/BannerPage";
+import UsersPage from "../pages/dashboard/UsersPage";
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <>
