@@ -100,8 +100,8 @@ function Sidebar({ setOpened }: SidebarProps) {
               />
               <NavLinkButton
                 setOpened={setOpened}
-                to={"/sana_agents"}
-                label={"Agents"}
+                to={"/banner"}
+                label={"Banner Management"}
                 iconKey={"personalcard"}
               />
 
