@@ -1,6 +1,5 @@
 import { notifications } from "@mantine/notifications";
 import { AxiosError } from "axios";
-import { useTranslation } from "react-i18next";
 
 interface ErrorResponse {
   error?: string;
@@ -17,15 +16,14 @@ interface ErrorNotificationOptions {
 }
 
 export function useErrorNotification() {
-  const { t } = useTranslation();
 
   const showErrorNotification = (
     error: AxiosError<ErrorResponse> | Error,
     options: ErrorNotificationOptions = {}
   ) => {
     const {
-      title = t("Error"),
-      fallbackMessage = t("Something went wrong!"),
+      title = ("Error"),
+      fallbackMessage = ("Something went wrong!"),
       showFieldErrors = true,
       customErrorMap = {},
     } = options;
@@ -96,7 +94,7 @@ export function useErrorNotification() {
     customMessage?: string
   ) => {
     showErrorNotification(error, {
-      fallbackMessage: customMessage || t("Something went wrong!"),
+      fallbackMessage: customMessage || ("Something went wrong!"),
     });
   };
 

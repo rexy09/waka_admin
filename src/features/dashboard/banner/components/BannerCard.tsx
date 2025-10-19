@@ -1,5 +1,5 @@
 import { ActionIcon, Anchor, Badge, Box, Button, Card, Group, Text } from "@mantine/core";
-import { Edit, ExternalLink, Play } from "lucide-react";
+import { Edit } from "lucide-react";
 import { FaYoutube } from "react-icons/fa";
 import { IBanner } from "../types";
 
