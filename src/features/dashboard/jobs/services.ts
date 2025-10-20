@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   addDoc,
   collection,
@@ -19,11 +20,15 @@ import {
 } from "firebase/firestore";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import { v4 as uuidv4 } from "uuid";
+import Env from "../../../config/env";
 import { db } from "../../../config/firebase";
 import { IAuthUser } from "../../auth/types";
+import { useUtilities } from "../../hooks/utils";
+import useDbService from "../../services/DbService";
 import {
   ICommitmentType,
   IHiredApplication,
+  IHiredJob,
   IJobApplication,
   IJobBid,
   IJobCategory,
@@ -33,23 +38,15 @@ import {
   IUrgencyLevels,
   IWorkLocations,
 } from "./types";
-import { JobFilterParameters } from "./stores";
-import Env from "../../../config/env";
-import useDbService from "../../services/DbService";
-import axios from "axios";
-import { useUtilities } from "../../hooks/utils";
 
 export const useJobServices = () => {
   const authUser = useAuthUser<IAuthUser>();
   const { hiredJobsRef, jobPostsRef, savedJobsRef } = useDbService();
   const { getISODateTimeString } = useUtilities();
 
-
   const getJobs = async (
-    p: JobFilterParameters,
     direction: "next" | "prev" | string | undefined,
-    startAfterDoc?: DocumentSnapshot,
-    endBeforeDoc?: DocumentSnapshot
+    startAfterDoc?: DocumentSnapshot
   ) => {
     const pageLimit: number = 6;
     const jobPostsCollection = collection(db, "jobPosts");
@@ -58,79 +55,51 @@ export const useJobServices = () => {
       orderBy("datePosted", "desc"),
     ];
 
-    if (p.category !== undefined && p.category !== null && p.category !== "") {
-      totalQueryConstraints.push(where("category", "==", p.category));
-    }
-    if (p.urgency !== undefined && p.urgency !== null && p.urgency !== "") {
-      totalQueryConstraints.push(where("urgency", "==", p.urgency));
-    }
-    if (
-      p.commitment !== undefined &&
-      p.commitment !== null &&
-      p.commitment !== ""
-    ) {
-      totalQueryConstraints.push(where("commitment", "==", p.commitment));
-    }
+    // Get total count
     const totalQuerySnapshot = query(
       jobPostsCollection,
       ...totalQueryConstraints
     );
     const count = await getCountFromServer(totalQuerySnapshot);
 
-    const dataCollection = collection(db, "jobPosts");
-
+    // Build data query
     const dataQueryConstraints = [
       where("isProduction", "==", Env.isProduction),
       orderBy("datePosted", "desc"),
     ];
-    if (p.category !== undefined && p.category !== null && p.category !== "") {
-      dataQueryConstraints.push(where("category", "==", p.category));
-    }
-    if (p.urgency !== undefined && p.urgency !== null && p.urgency !== "") {
-      dataQueryConstraints.push(where("urgency", "==", p.urgency));
-    }
-    if (
-      p.commitment !== undefined &&
-      p.commitment !== null &&
-      p.commitment !== ""
-    ) {
-      dataQueryConstraints.push(where("commitment", "==", p.commitment));
-    }
 
     let dataQuery = query(
-      dataCollection,
+      jobPostsCollection,
       ...dataQueryConstraints,
       limit(pageLimit)
     );
+
     if (direction === "next" && startAfterDoc) {
-      // For next direction, start after the provided document
-      dataQuery = query(dataQuery, startAfter(startAfterDoc));
-    } else if (direction === "prev" && endBeforeDoc) {
-      // For previous direction, end before the provided document and limit to last
       dataQuery = query(
-        dataCollection,
-        endBefore(endBeforeDoc),
-        orderBy("datePosted", "desc"),
-        limitToLast(pageLimit)
+        jobPostsCollection,
+        ...dataQueryConstraints,
+        startAfter(startAfterDoc),
+        limit(pageLimit)
       );
     }
 
-    // Get snapshot of documents based on the final query
+    // Fetch documents
     const documentSnapshots = await getDocs(dataQuery);
+
     const dataList = documentSnapshots.docs.map((doc) => {
       const data = doc.data();
       return {
         ...(data as IJobPost),
-        // id: doc.id,
-        // datePosted: data.datePosted.toDate().toString(),
+        id: doc.id,
       };
     });
 
     return {
       count: count.data().count,
       data: dataList,
-      lastDoc: documentSnapshots.docs[documentSnapshots.docs.length - 1],
-      firstDoc: documentSnapshots.docs[0],
+      lastDoc:
+        documentSnapshots.docs[documentSnapshots.docs.length - 1] ?? null,
+      firstDoc: documentSnapshots.docs[0] ?? null,
     };
   };
 
@@ -337,7 +306,7 @@ export const useJobServices = () => {
       throw new Error("User is not authenticated");
     }
     console.log("Posting job for user:", authUser.dateAdded);
-    
+
     const dataCollection = jobPostsRef;
     const uuid = uuidv4();
     const jobData = {
@@ -752,6 +721,70 @@ export const useJobServices = () => {
     return applications;
   };
 
+  const getHiredJobs = async (
+    direction: "next" | "prev" | string | undefined = "next",
+    startAfterDoc?: DocumentSnapshot,
+    endBeforeDoc?: DocumentSnapshot
+  ) => {
+    const pageLimit: number = 10;
+
+
+    // Build query constraints
+    const queryConstraints = [
+      where("isProduction", "==", Env.isProduction),
+      orderBy("dateHired", "desc"),
+    ];
+
+    // Get total count
+    const totalQuery = query(hiredJobsRef, ...queryConstraints);
+    const count = await getCountFromServer(totalQuery);
+
+    // Build paginated query
+    let dataQuery = query(hiredJobsRef, ...queryConstraints, limit(pageLimit));
+
+    if (direction === "next" && startAfterDoc) {
+      dataQuery = query(
+        hiredJobsRef,
+        ...queryConstraints,
+        startAfter(startAfterDoc),
+        limit(pageLimit)
+      );
+    } else if (direction === "prev" && endBeforeDoc) {
+      dataQuery = query(
+        hiredJobsRef,
+        ...queryConstraints,
+        endBefore(endBeforeDoc),
+        limitToLast(pageLimit)
+      );
+    }
+
+    const hiredJobsSnapshot = await getDocs(dataQuery);
+
+    // Map hired jobs and optionally count applicants in each
+    const hiredJobsList = await Promise.all(
+      hiredJobsSnapshot.docs.map(async (doc) => {
+        const data = doc.data() as IHiredJob;
+
+        // Optionally get applicants count for each hired job
+        const applicantsCollection = collection(doc.ref, "applicants");
+        const applicantsSnapshot = await getDocs(applicantsCollection);
+
+        return {
+          ...data,
+          id: doc.id,
+          applicantsCount: applicantsSnapshot.size,
+        } as IHiredJob;
+      })
+    );
+
+    return {
+      count: count.data().count,
+      data: hiredJobsList,
+      lastDoc: hiredJobsSnapshot.docs[hiredJobsSnapshot.docs.length - 1],
+      firstDoc: hiredJobsSnapshot.docs[0],
+    };
+  };
+
   const getAllHiredJobApplications = async ({ jobId }: { jobId: string }) => {
     // 1. Query hiredJobsRef for documents with jobId
     const hiredJobsQuery = query(
@@ -949,5 +982,6 @@ export const useJobServices = () => {
     employApplicantFromJob,
     getUserJobPostCount,
     getWorkLocations,
+    getHiredJobs,
   };
 };

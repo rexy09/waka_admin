@@ -47,7 +47,7 @@ export interface IJobPost {
   postedByUserId: string;
   title: string | null;
   urgency: string;
-  userDateJoined: Timestamp |string | null; // or Date if parsed
+  userDateJoined: Timestamp | string | null; // or Date if parsed
   videoUrl: string | null;
   voiceUrl: string | null;
   workLocation: string;
@@ -125,7 +125,6 @@ export interface IJobApplicationWithPost {
   job: IJobPost;
 }
 
-
 export interface IHiredApplication {
   amount: number;
   applicantName: string;
@@ -152,8 +151,8 @@ export interface IJobBid {
   avatarUrl: string;
   bidderId: string;
   bidderName: string;
-  dateAdded: string | Timestamp; 
-  dateBid: Date; 
+  dateAdded: string | Timestamp;
+  dateBid: Date;
   dateUpdated: string;
   id: string;
   isProduction: boolean;
@@ -161,4 +160,14 @@ export interface IJobBid {
   lastUpdated: string;
   message: string;
   status: string;
+}
+
+export interface IHiredJob {
+  id?: string;
+  jobTitle: string;
+  jobId: string;
+  postedByUserId: string;
+  dateHired: Date | Timestamp | string;
+  isProduction?: boolean;
+  applicantsCount?: number;
 }

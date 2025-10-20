@@ -112,11 +112,12 @@ export const useUserServices = () => {
   };
 
   const getUserById = async (userId: string) => {
+    
     try {
       const userQuery = query(
         usersRef,
         where("uid", "==", userId),
-        where("isProduction", "==", Env.isProduction),
+        // where("isProduction", "==", Env.isProduction),
         limit(1)
       );
 

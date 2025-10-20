@@ -19,6 +19,8 @@ import DashboardLayout from "../common/layouts/DashboardLayout";
 import NotificationCenterPage from "../pages/dashboard/NotificationCenterPage";
 import BannerPage from "../pages/dashboard/BannerPage";
 import UsersPage from "../pages/dashboard/UsersPage";
+import HiredJobsPage from "../pages/dashboard/HiredJobsPage";
+import UserDetailsPage from "../pages/dashboard/UserDetailsPage";
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -34,6 +36,7 @@ export const router = createBrowserRouter(
       >
         <Route index path="/" element={<DashboardPage />} />
         <Route index path="/jobs" element={<JobsPage />} />
+        <Route index path="/hired_jobs" element={<HiredJobsPage />} />
         <Route index path="/jobs/:id" element={<PostedJobDetailsPage />} />
         <Route index path="/complete_profile" element={<CompleteProfilePage />} />
         <Route index path="/post_job" element={<PostJobPage />} />
@@ -42,6 +45,7 @@ export const router = createBrowserRouter(
         <Route index path="/my_jobs/:id/posted" element={<PostedJobDetailsPage />} />
         <Route index path="/profile" element={<ProfilePage />} />
         <Route index path="/users" element={<UsersPage />} />
+        <Route index path="/users/:id" element={<UserDetailsPage />} />
         <Route index path="/notification_center" element={<NotificationCenterPage />} />
         <Route index path="/banner" element={<BannerPage />} />
       </Route>

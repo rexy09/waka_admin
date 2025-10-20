@@ -1,19 +1,13 @@
 import {
   Avatar,
-  Badge,
-  Button,
   Group,
-  Modal,
-  Paper,
-  Stack,
   Table,
   Text
 } from "@mantine/core";
-import { useClipboard, useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
 import { DocumentSnapshot } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
-import { MdContentCopy, MdRemoveRedEye } from "react-icons/md";
+import { MdRemoveRedEye } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 import { CustomTable } from "../../../../common/components/Table/CustomTable";
 import { IUser } from "../../../auth/types";
 import CustomBadge from "../components/CustomBadge";
@@ -23,9 +17,7 @@ import { UserFilterParameters } from "../types";
 
 export default function UsersTable() {
   const { getUsers, getFilterOptions } = useUserServices();
-  const clipboard = useClipboard();
-  const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+  const navigate = useNavigate();
   const [users, setUsers] = useState<IUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -97,20 +89,13 @@ export default function UsersTable() {
     [fetchUsers]
   );
 
-  const handleCopyPhone = (phoneNumber: string) => {
-    clipboard.copy(phoneNumber);
-    notifications.show({
-      title: "Copied to clipboard",
-      message: "Phone number has been copied",
-      color: "green",
-      icon: <MdContentCopy />,
-    });
-  };
 
   const handleViewUserDetails = (user: IUser) => {
-    setSelectedUser(user);
-    open();
+    // Navigate to user details page
+    navigate(`/users/${user.uid}`);
   };
+
+ 
 
   useEffect(() => {
     const initializeData = async () => {
@@ -135,7 +120,6 @@ export default function UsersTable() {
         User
       </Table.Th>
       <Table.Th>Email</Table.Th>
-      {/* <Table.Th>Phone</Table.Th> */}
       <Table.Th>Role</Table.Th>
       <Table.Th>User Type</Table.Th>
       <Table.Th>Status</Table.Th>
@@ -168,23 +152,7 @@ export default function UsersTable() {
       <Table.Td>
         <Text size="sm">{user.email}</Text>
       </Table.Td>
-      {/* <Table.Td style={{ minWidth: "120px" }}>
-        <div className="flex items-center space-x-2">
-          <Text size="sm" className="font-medium text-gray-700">
-            {user.phoneNumber || "-"}
-          </Text>
-          {user.phoneNumber && (
-            <Tooltip label="Copy phone number">
-              <button
-                onClick={() => handleCopyPhone(user.phoneNumber!)}
-                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors group"
-              >
-                <MdContentCopy className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-              </button>
-            </Tooltip>
-          )}
-        </div>
-      </Table.Td> */}
+    
       <Table.Td style={{ minWidth: "80px" }}>
         <div className="min-w-[60px] flex justify-center">
           <CustomBadge
@@ -202,8 +170,8 @@ export default function UsersTable() {
               user.userType === "employer"
                 ? "purple"
                 : user.userType === "jobseeker"
-                ? "orange"
-                : "secondary"
+                  ? "orange"
+                  : "secondary"
             }
             size="sm"
           >
@@ -248,14 +216,14 @@ export default function UsersTable() {
         <Text size="sm">
           {user.dateAdded
             ? new Date(
-                typeof user.dateAdded === "string"
-                  ? user.dateAdded
-                  : (user.dateAdded as any).toDate()
-              ).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              typeof user.dateAdded === "string"
+                ? user.dateAdded
+                : (user.dateAdded as any).toDate()
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-"}
         </Text>
       </Table.Td>
@@ -292,204 +260,7 @@ export default function UsersTable() {
         fetchData={handlePagination}
       />
 
-      {/* User Details Modal */}
-      <Modal
-        opened={opened}
-        onClose={close}
-        title="User Details"
-        size="lg"
-        centered
-        
-      >
-        {selectedUser && (
-          <Stack >
-            {/* Header Section */}
-            <Paper>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Avatar 
-                    src={selectedUser.avatarURL} 
-                    size={60} 
-                    radius="lg"
-                    className="ring-4 ring-blue-50"
-                  >
-                    {selectedUser.fullName?.charAt(0)?.toUpperCase()}
-                  </Avatar>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">
-                      {selectedUser.fullName || "Unknown User"}
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {selectedUser.email}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Badge
-                        variant={
-                          selectedUser.userType === "employer"
-                            ? "violet"
-                            : selectedUser.userType === "jobseeker"
-                            ? "orange"
-                            : "gray"
-                        }
-                        size="sm"
-                        className="capitalize"
-                      >
-                        {selectedUser.userType || "unknown"}
-                      </Badge>
-                      <Badge
-                        variant={selectedUser.role === "admin" ? "red" : "blue"}
-                        size="sm"
-                        className="capitalize"
-                      >
-                        {selectedUser.role}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                
-              </div>
-            </Paper>
-
-            {/* Content Section */}
-            <>
-              {/* Contact Information Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  Contact Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email Address
-                    </label>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedUser.email || "-"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Phone Number
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm font-medium text-gray-900">
-                        {selectedUser.phoneNumber || "-"}
-                      </p>
-                      {selectedUser.phoneNumber && (
-                        <button
-                          onClick={() => handleCopyPhone(selectedUser.phoneNumber!)}
-                          className="p-1.5 hover:bg-gray-100 rounded-md transition-colors group"
-                          title="Copy phone number"
-                        >
-                          <MdContentCopy className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Country
-                    </label>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedUser.country?.name || "-"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Member Since
-                    </label>
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedUser.dateAdded
-                        ? new Date(
-                            typeof selectedUser.dateAdded === "string"
-                              ? selectedUser.dateAdded
-                              : (selectedUser.dateAdded as any).toDate()
-                          ).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                        : "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Account Status Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  Account Status
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="mb-2">
-                      <Badge
-                        variant={selectedUser.status === "active" ? "green" : "gray"}
-                        size="md"
-                        className="capitalize"
-                      >
-                        {selectedUser.status || "active"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                      Status
-                    </p>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="mb-2">
-                      <Badge
-                        variant={selectedUser.isVerified ? "green" : "red"}
-                        size="md"
-                        className="capitalize"
-                      >
-                        {selectedUser.isVerified ? "Verified" : "Unverified"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                      Verification
-                    </p>
-                  </div>
-
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="mb-2">
-                      <Badge
-                        variant={selectedUser.isProduction ? "green" : "red"}
-                        size="md"
-                        className="capitalize"
-                      >
-                        {selectedUser.isProduction ? "Production" : "Staging"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                      Environment
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
-                <Button 
-                  variant="outline" 
-                  onClick={close}
-                  className="px-6 py-2"
-                >
-                  Close
-                </Button>
-                <Button 
-                  variant="filled"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700"
-                  onClick={() => {
-                    // Add any additional actions here if needed
-                  }}
-                >
-                  View Profile
-                </Button>
-              </div>
-            </>
-          </Stack>
-        )}
-      </Modal>
+      
     </>
   );
 }

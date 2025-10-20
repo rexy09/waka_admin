@@ -91,6 +91,12 @@ function Sidebar({ setOpened }: SidebarProps) {
                 label={"Jobs"}
                 iconKey={"wallet"}
               />
+              <NavLinkButton
+                setOpened={setOpened}
+                to={"/hired_jobs"}
+                label={"Hired Jobs"}
+                iconKey={"wallet"}
+              />
 
               <NavLinkButton
                 setOpened={setOpened}

@@ -47,8 +47,6 @@ export default function PostedJobDetails() {
     getJobBids,
     getJobApplications,
     getAllHiredJobApplications,
-    // unemployApplicantFromJob,
-    // employApplicantFromJob
   } = useJobServices();
   const { id } = useParams();
 
@@ -61,7 +59,6 @@ export default function PostedJobDetails() {
     IHiredApplication[]
   >([]);
   const [loadingHired, setLoadingHired] = useState(false);
-  // const [loadingUnemployment, setLoadingUnemployment] = useState("");
   const [activeTab, setActiveTab] = useState("applicants");
 
   const tabs = [
@@ -71,30 +68,7 @@ export default function PostedJobDetails() {
 
   
 
-  // const handleUnemployApplicantFromJob = async (applicantUid: string) => {
-  //   setLoadingUnemployment(applicantUid);
-  //   unemployApplicantFromJob(job?.id!, applicantUid)
-  //     .then((_response) => {
-  //       setLoadingUnemployment("");
-  //       fetchJobApplications();
-  //     })
-  //     .catch((error) => {
-  //       setLoadingUnemployment("");
-  //       console.log(error);
-  //     });
-  // };
-  // const handleEmployApplicantFromJob = async (applicantUid: string) => {
-  //   setLoadingUnemployment(applicantUid);
-  //   employApplicantFromJob(job?.id!, applicantUid)
-  //     .then((_response) => {
-  //       setLoadingUnemployment("");
-  //       fetchJobApplications();
-  //     })
-  //     .catch((error) => {
-  //       setLoadingUnemployment("");
-  //       console.log(error);
-  //     });
-  // };
+  
 
   const fetchJobApplications = async () => {
     if (!job) return;
@@ -260,18 +234,7 @@ export default function PostedJobDetails() {
           </div>
         </Group>
         <Stack align="end">
-          {/* {bid.status != "accepted" && (
-            <Button
-              variant="filled"
-              color="#151F42"
-              size="xs"
-              radius={"xl"}
-              fw={500}
-
-            >
-              Employ
-            </Button>
-          )} */}
+          
         </Stack>
       </Group>
     </Paper>
@@ -279,6 +242,7 @@ export default function PostedJobDetails() {
   const hiredCards = hiredApplications.map((applicant, index) => (
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={index}>
       <Group wrap="nowrap" align="center" justify="space-between">
+        <UnstyledButton onClick={() => navigate(`/users/${applicant.applicantUid}`)}>
         <Group wrap="nowrap" gap={"xs"}>
           <UserAvatar userId={applicant.applicantUid} />
           <div>
@@ -315,24 +279,17 @@ export default function PostedJobDetails() {
             )}
           </div>
         </Group>
+        </UnstyledButton>
         <Group wrap="nowrap" gap={8}>
-          {/* <ActionIcon color="#43A047" radius={"xl"} size={"lg"}>
-            <MdOutlineCall color="white" />
-          </ActionIcon> */}
-          {/* <Button
-            variant="filled"
-            color="#E53935"
-            size="xs"
-            radius={"xl"}
-            fw={500}
-            disabled={loadingUnemployment === applicant.applicantUid}
-            loading={loadingUnemployment === applicant.applicantUid}
-            onClick={() =>
-              handleUnemployApplicantFromJob(applicant.applicantUid)
-            }
+          <Badge
+            variant="light"
+            color={applicant.status === "completed" ? "green" : applicant.status === "in_progress" ? "blue" : "gray"}
+            size="sm"
+            radius="xl"
           >
-            Unemploy
-          </Button> */}
+            {applicant.status ?? "N/A"}
+          </Badge>
+          
         </Group>
       </Group>
     </Paper>

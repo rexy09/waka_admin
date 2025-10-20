@@ -68,8 +68,6 @@ export default function JobCard({ job }: Props) {
       isSaved
     );
 
-    
-
     if (isLoading || checkingStatus) {
       console.log("Already loading, skipping...");
       return;
@@ -110,7 +108,6 @@ export default function JobCard({ job }: Props) {
 
   return (
     <>
-     
       <div className="group relative mx-auto w-[100%] overflow-hidden rounded-[13px] bg-white-300 p-[1px] transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#151F42] hover:via-[#170645] hover:to-[#044299]">
         <div className="group-hover:animate-spin-slow invisible absolute -top-40 -bottom-40 left-10 right-10 bg-gradient-to-r from-transparent via-white/90 to-transparent group-hover:visible"></div>
 
@@ -254,20 +251,24 @@ export default function JobCard({ job }: Props) {
               </Group>
             )}
             <Space h="xs" />
-            <Text size="20px" fw={500} c="#151F42">
-              <NumberFormatter
-                prefix={`${job.currency ? job.currency.code : "TZS"} `}
-                value={job.budget}
-                thousandSeparator
-              />
-              {job.maxBudget > 0 && (
+            <Group justify="space-between" align="center">
+              <Text size="20px" fw={500} c="#151F42">
                 <NumberFormatter
-                  prefix={` - ${job.currency ? job.currency.code : "TZS"} `}
-                  value={job.maxBudget}
+                  prefix={`${job.currency ? job.currency.code : "TZS"} `}
+                  value={job.budget}
                   thousandSeparator
                 />
-              )}
-            </Text>
+              </Text>
+              <span
+                className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${
+                  job.isProduction
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {job.isProduction ? "Production" : "Development"}
+              </span>
+            </Group>
           </Card>
         </div>
       </div>
