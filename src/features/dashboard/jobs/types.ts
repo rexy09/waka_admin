@@ -170,4 +170,5 @@ export interface IHiredJob {
   dateHired: Date | Timestamp | string;
   isProduction?: boolean;
   applicantsCount?: number;
+  completedApplicants?: number;
 }

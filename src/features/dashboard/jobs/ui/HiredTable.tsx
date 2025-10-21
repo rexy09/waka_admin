@@ -80,6 +80,7 @@ export default function HiredTable() {
         Job Title
       </Table.Th>
       <Table.Th>Applicants</Table.Th>
+      <Table.Th>Completed</Table.Th>
       <Table.Th>Date Hired</Table.Th>
       <Table.Th
         style={{
@@ -102,6 +103,15 @@ export default function HiredTable() {
       <Table.Td>
         <Badge variant="light" color="blue" size="md">
           {job.applicantsCount || 0} applicant{job.applicantsCount !== 1 ? 's' : ''}
+        </Badge>
+      </Table.Td>
+      <Table.Td>
+        <Badge 
+          variant="light" 
+          color={job.completedApplicants && job.completedApplicants > 0 ? "green" : "gray"} 
+          size="md"
+        >
+          {job.completedApplicants || 0} applicant{job.completedApplicants !== 1 ? 's' : ''}
         </Badge>
       </Table.Td>
       <Table.Td>

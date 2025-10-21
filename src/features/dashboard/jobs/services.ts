@@ -768,11 +768,15 @@ export const useJobServices = () => {
         // Optionally get applicants count for each hired job
         const applicantsCollection = collection(doc.ref, "applicants");
         const applicantsSnapshot = await getDocs(applicantsCollection);
+        const completedApplicants = applicantsSnapshot.docs.filter(doc => 
+          doc.data().status === "completed"
+        );
 
         return {
           ...data,
           id: doc.id,
           applicantsCount: applicantsSnapshot.size,
+          completedApplicants: completedApplicants.length,
         } as IHiredJob;
       })
     );
