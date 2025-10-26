@@ -47,7 +47,7 @@ export default function BannerModalForm({
       title: "",
       description: "",
       banner_type: "image",
-      cta_text: "",
+      cta_text: "Learn More",
       cta_link: "",
       audience: "all",
       is_active: true,
@@ -59,8 +59,20 @@ export default function BannerModalForm({
     },
 
     validate: {
-      title: isNotEmpty("Title is required"),
-      description: isNotEmpty("Description is required"),
+      title: (value, values) => {
+        // Title is only required for non-media banner types
+        if (!["image", "video", "youtube"].includes(values.banner_type) && !value) {
+          return "Title is required";
+        }
+        return null;
+      },
+      description: (value, values) => {
+        // Description is only required for non-media banner types
+        if (!["image", "video", "youtube"].includes(values.banner_type) && !value) {
+          return "Description is required";
+        }
+        return null;
+      },
       banner_type: isNotEmpty("Banner type is required"),
       // cta_text: isNotEmpty("CTA text is required"),
       // cta_link: (value) => {
@@ -191,55 +203,59 @@ export default function BannerModalForm({
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
-          {/* Title and Description - Full Width */}
-          <TextInput
-            label="Title"
-            placeholder="Enter banner title"
+          <Select
+            label="Banner Type"
+            placeholder="Select banner type"
             withAsterisk
-            {...form.getInputProps("title")}
+            data={[
+              { value: "image", label: "Image" },
+              { value: "youtube", label: "YouTube" },
+              { value: "info", label: "Info" },
+              { value: "education", label: "Education" },
+              { value: "news", label: "News" },
+            ]}
+            {...form.getInputProps("banner_type")}
           />
 
-          <Textarea
-            label="Description"
-            placeholder="Enter banner description"
-            withAsterisk
-            minRows={2}
-            {...form.getInputProps("description")}
-          />
+          {/* Only show title and description for non-media banner types */}
+          {!["image", "video", "youtube"].includes(form.values.banner_type) && (
+            <>
+              <TextInput
+                label="Title"
+                placeholder="Enter banner title"
+                withAsterisk
+                {...form.getInputProps("title")}
+              />
+
+              <Textarea
+                label="Description"
+                placeholder="Enter banner description"
+                withAsterisk
+                minRows={2}
+                {...form.getInputProps("description")}
+              />
+            </>
+          )}
 
           {/* Banner Type and Media - Grid */}
           <SimpleGrid cols={2}>
-            <Select
-              label="Banner Type"
-              placeholder="Select banner type"
-              withAsterisk
-              data={[
-                { value: "image", label: "Image" },
-                { value: "video", label: "Video" },
-                { value: "youtube", label: "YouTube" },
-                { value: "text", label: "Text" },
-                { value: "info", label: "Info" },
-                { value: "education", label: "Education" },
-                { value: "news", label: "News" },
-              ]}
-              {...form.getInputProps("banner_type")}
-            />
 
-            {form.values.banner_type == "youtube" &&<TextInput
-                label="YouTube URL"
-                placeholder="https://www.youtube.com/watch?v=..."
-                withAsterisk
-                {...form.getInputProps("youtube_url")}
-              />}
-              <FileInput
-                label="Image"
-                placeholder="Select image file"
-                accept="image/*"
-                withAsterisk={!isEditing}
-                {...form.getInputProps("image")}
-                size="md"
-                radius={"md"}
-              />
+
+            {form.values.banner_type == "youtube" && <TextInput
+              label="YouTube URL"
+              placeholder="https://www.youtube.com/watch?v=..."
+              withAsterisk
+              {...form.getInputProps("youtube_url")}
+            />}
+            <FileInput
+              label="Image"
+              placeholder="Select image file"
+              accept="image/*"
+              withAsterisk={!isEditing}
+              {...form.getInputProps("image")}
+              size="md"
+              radius={"md"}
+            />
           </SimpleGrid>
 
           {/* CTA Text and Link - Grid */}
@@ -309,7 +325,7 @@ export default function BannerModalForm({
             />
           </SimpleGrid>
 
-          <Divider  label="Banner Preview" labelPosition="center" />
+          <Divider label="Banner Preview" labelPosition="center" />
 
           {/* Banner Preview Section */}
           <Paper
@@ -323,8 +339,8 @@ export default function BannerModalForm({
               backgroundImage: form.values.image instanceof File
                 ? `url(${URL.createObjectURL(form.values.image)})`
                 : form.values.youtube_url
-                ? `url(https://img.youtube.com/vi/${extractYouTubeId(form.values.youtube_url)}/maxresdefault.jpg)`
-                : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  ? `url(https://img.youtube.com/vi/${extractYouTubeId(form.values.youtube_url)}/maxresdefault.jpg)`
+                  : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
@@ -409,22 +425,25 @@ export default function BannerModalForm({
                   </Group>
                 </Group>
 
-                <Text
-                  size="xl"
-                  fw={700}
-                  c="white"
-                  style={{
-                    textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {form.values.title || "Banner Title"}
-                </Text>
+                {/* Only show title for non-media banner types */}
+                {!["image", "video", "youtube"].includes(form.values.banner_type) && (
+                  <Text
+                    size="xl"
+                    fw={700}
+                    c="white"
+                    style={{
+                      textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {form.values.title || "Banner Title"}
+                  </Text>
+                )}
               </Box>
 
               {/* Bottom section */}
               <Group justify="flex-end" align="center">
-                {form.values.cta_link &&<Button
+                {form.values.cta_link && <Button
                   radius="md"
                   size="sm"
                   variant="white"

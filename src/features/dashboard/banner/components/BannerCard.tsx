@@ -1,5 +1,5 @@
 import { ActionIcon, Anchor, Badge, Box, Button, Card, Group, Text } from "@mantine/core";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { FaYoutube } from "react-icons/fa";
 import { IBanner } from "../types";
 
@@ -9,7 +9,7 @@ interface BannerCardProps {
   onDelete?: (id: string) => void;
 }
 
-export default function BannerCard({ banner, onEdit }: BannerCardProps) {
+export default function BannerCard({ banner, onEdit, onDelete }: BannerCardProps) {
   // Extract YouTube video ID from URL
   const getYouTubeVideoId = (url: string): string | null => {
     if (!url) return null;
@@ -119,8 +119,8 @@ export default function BannerCard({ banner, onEdit }: BannerCardProps) {
       >
         {/* Top section */}
         <Box>
-            <Group gap="xs" justify="space-between">
-              <Group gap="xs">
+          <Group gap="xs" justify="space-between">
+            <Group gap="xs">
 
               <Badge
                 color={banner.is_active ? "green" : "red"}
@@ -135,9 +135,9 @@ export default function BannerCard({ banner, onEdit }: BannerCardProps) {
               >
                 {banner.is_active ? "Active" : "Inactive"}
               </Badge>
-              <Badge 
-                variant="filled" 
-                color="blue" 
+              <Badge
+                variant="filled"
+                color="blue"
                 size="sm"
                 style={{
                   backgroundColor: "#339af0",
@@ -148,40 +148,58 @@ export default function BannerCard({ banner, onEdit }: BannerCardProps) {
               >
                 {banner.banner_type}
               </Badge>
-              </Group>
-            {onEdit && (
-              <ActionIcon
-                variant="filled"
-                color="transparent"
-                radius="md"
-                onClick={() => onEdit(banner.id)}
-                style={{
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-                }}
-              >
-                <Edit size={18} />
-              </ActionIcon>
-            )}
             </Group>
+            <Group gap="xs">
+              {onEdit && (
+                <ActionIcon
+                  variant="filled"
+                  color="blue"
+                  radius="md"
+                  onClick={() => onEdit(banner.id)}
+                  style={{
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <Edit size={18} />
+                </ActionIcon>
+              )}
+              {onDelete && (
+                <ActionIcon
+                  variant="filled"
+                  color="red"
+                  radius="md"
+                  onClick={() => onDelete(banner.id)}
+                  style={{
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <Trash2 size={18} />
+                </ActionIcon>
+              )}
+            </Group>
+          </Group>
 
-          <Text
-            size="xl"
-            fw={700}
-            c="white"
-            style={{
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-              lineHeight: 1.3,
-            }}
-          >
-            {banner.title}
-          </Text>
+          {/* Only show title for non-media banner types */}
+          {!["image", "video", "youtube"].includes(banner.banner_type) && banner.title && (
+            <Text
+              size="xl"
+              fw={700}
+              c="white"
+              style={{
+                textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                lineHeight: 1.3,
+              }}
+            >
+              {banner.title}
+            </Text>
+          )}
 
-          
+
         </Box>
 
         {/* Bottom section */}
         <Group justify="flex-end" align="center">
-          {banner.cta_link  &&<Anchor
+          {banner.cta_link && <Anchor
             href={banner.cta_link || "#"}
             target="_blank"
             rel="noopener noreferrer"
@@ -202,9 +220,9 @@ export default function BannerCard({ banner, onEdit }: BannerCardProps) {
         </Group>
       </Box>
 
-      
 
-  
+
+
     </Card>
   );
 }
