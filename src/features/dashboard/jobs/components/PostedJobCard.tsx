@@ -15,6 +15,7 @@ import { TbUser, TbUsers } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
 import { Icons } from "../../../../common/icons";
 import { IJobPost } from "../types";
+import { getCategoryText } from "../utils";
 interface Props {
   job: IJobPost;
 }
@@ -52,7 +53,7 @@ export default function PostedJobCard({ job }: Props) {
                     lineClamp={1}
                     style={{ lineHeight: 1.2 }}
                   >
-                    {job.title ? job.title : job.category}
+                    {job.title ? job.title : getCategoryText(job.category)}
                   </Text>
                   <Menu shadow="md" width={150}>
                     <Menu.Target>
@@ -96,7 +97,7 @@ export default function PostedJobCard({ job }: Props) {
                 lineClamp={1}
                 style={{ lineHeight: 1.2 }}
               >
-                {job.category}
+                {getCategoryText(job.category)}
               </Text>
               <Group wrap="nowrap" gap={3}>
                 {Icons.location2}

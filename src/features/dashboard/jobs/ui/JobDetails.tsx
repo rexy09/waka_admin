@@ -26,6 +26,7 @@ import { JobDetailsCardSkeleton } from "../components/Loaders";
 import SearchModal from "../components/SearchModal";
 import { useJobServices } from "../services";
 import { IJobPost } from "../types";
+import { getCategoryText } from "../utils";
 
 export default function JobDetails() {
   const { getJob } = useJobServices();
@@ -58,8 +59,7 @@ export default function JobDetails() {
 
   const openGoogleMaps = () => {
     window.open(
-      `https://maps.google.com?q=${job?.location.latitude},${
-        job?.location.longitude
+      `https://maps.google.com?q=${job?.location.latitude},${job?.location.longitude
       } (${encodeURIComponent(job?.location.address ?? "")})`,
       "_blank"
     );
@@ -85,14 +85,13 @@ export default function JobDetails() {
                 <div>
                   <Group justify="space-between" wrap="nowrap" align="start">
                     <Text size="18px" fw={600} c="#141514">
-                      {job.title ? job.title : job.category}
+                      {job.title ? job.title : getCategoryText(job.category)}
                     </Text>
                     <div
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-                        job.isActive
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${job.isActive
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {job.isActive ? "Active" : "Closed"}
                     </div>
@@ -192,17 +191,15 @@ export default function JobDetails() {
                       </Text>
                       <Text size="16px" fw={700} c="#151F42">
                         <NumberFormatter
-                          prefix={`${
-                            job.currency ? job.currency.code : "TZS"
-                          } `}
+                          prefix={`${job.currency ? job.currency.code : "TZS"
+                            } `}
                           value={job.budget}
                           thousandSeparator
                         />
                         {job.maxBudget > 0 && (
                           <NumberFormatter
-                            prefix={` - ${
-                              job.currency ? job.currency.code : "TZS"
-                            } `}
+                            prefix={` - ${job.currency ? job.currency.code : "TZS"
+                              } `}
                             value={job.maxBudget}
                             thousandSeparator
                           />
@@ -271,13 +268,13 @@ export default function JobDetails() {
                           Joined{" "}
                           {job.userDateJoined
                             ? moment(
-                                typeof job.userDateJoined === "string"
-                                  ? new Date(job.userDateJoined)
-                                  : timestampToISO(
-                                      job.userDateJoined.seconds ?? 0,
-                                      job.userDateJoined.nanoseconds ?? 0
-                                    )
-                              ).format("MMMM YYYY")
+                              typeof job.userDateJoined === "string"
+                                ? new Date(job.userDateJoined)
+                                : timestampToISO(
+                                  job.userDateJoined.seconds ?? 0,
+                                  job.userDateJoined.nanoseconds ?? 0
+                                )
+                            ).format("MMMM YYYY")
                             : "NA"}
                         </Text>
                       </Group>

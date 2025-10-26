@@ -21,6 +21,7 @@ import { TypeAnimation } from "react-type-animation";
 import { Icons } from "../../../../common/icons";
 import Env from "../../../../config/env";
 import { ICategory } from "../types";
+import { getCategoryText } from "../utils";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -90,7 +91,7 @@ export default function SearchModal() {
                             lineClamp={1}
                             style={{ lineHeight: 1.2 }}
                         >
-                            {job.title ? job.title : job.category}
+                            {job.title ? job.title : getCategoryText(job.category)}
                         </Text>
 
                         <Space h="xs" />
@@ -104,7 +105,7 @@ export default function SearchModal() {
                         lineClamp={1}
                         style={{ lineHeight: 1.2 }}
                     >
-                        {job.category}
+                        {getCategoryText(job.category)}
                     </Text>
                     <Group wrap="nowrap" gap={3}>
                         {Icons.location2}

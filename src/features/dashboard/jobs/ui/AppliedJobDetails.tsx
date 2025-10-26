@@ -26,6 +26,7 @@ import { timestampToISO } from "../../../hooks/utils";
 import { JobDetailsCardSkeleton } from "../components/Loaders";
 import { useJobServices } from "../services";
 import { IJobApplication, IJobPost } from "../types";
+import { getCategoryText } from "../utils";
 
 export default function AppliedJobDetails() {
   const authUser = useAuthUser<IUser>();
@@ -88,7 +89,7 @@ export default function AppliedJobDetails() {
 
   return (
     <div>
-      
+
       <Grid justify="center" align="start">
         <Grid.Col span={{ base: 12, md: 6, lg: 8 }}>
           {!isLoading && job ? (
@@ -118,7 +119,7 @@ export default function AppliedJobDetails() {
                 <div>
                   <Group justify="space-between" wrap="nowrap" align="start">
                     <Text size="18px" fw={600} c="#141514">
-                      {job.title ? job.title : job.category}
+                      {job.title ? job.title : getCategoryText(job.category)}
                     </Text>
                     {applied && (
                       <Badge
@@ -339,7 +340,7 @@ export default function AppliedJobDetails() {
         </Grid.Col>
       </Grid>
 
-      
+
     </div>
   );
 }

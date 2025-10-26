@@ -37,6 +37,7 @@ import {
   IJobBid,
   IJobPost,
 } from "../types";
+import { getCategoryText } from "../utils";
 
 export default function PostedJobDetails() {
   const navigate = useNavigate();
@@ -66,9 +67,9 @@ export default function PostedJobDetails() {
     { id: "hired", label: "Hired" },
   ];
 
-  
 
-  
+
+
 
   const fetchJobApplications = async () => {
     if (!job) return;
@@ -149,7 +150,7 @@ export default function PostedJobDetails() {
   }, [id]);
 
   useEffect(() => {
-    if (job ) {
+    if (job) {
       fetchJobApplications();
     }
   }, [job]);
@@ -234,7 +235,7 @@ export default function PostedJobDetails() {
           </div>
         </Group>
         <Stack align="end">
-          
+
         </Stack>
       </Group>
     </Paper>
@@ -243,42 +244,42 @@ export default function PostedJobDetails() {
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={index}>
       <Group wrap="nowrap" align="center" justify="space-between">
         <UnstyledButton onClick={() => navigate(`/users/${applicant.applicantUid}`)}>
-        <Group wrap="nowrap" gap={"xs"}>
-          <UserAvatar userId={applicant.applicantUid} />
-          <div>
-            <Text size="16px" fw={500} c="#000000">
-              {applicant.applicantName}
-            </Text>
-            <Space h="5px" />
-            <Group wrap="nowrap" gap={3}>
-              <Text size="sm" fw={400} c="#596258">
-                Hired at{" "}
-                {moment(
-                  typeof applicant?.dateHired === "string"
-                    ? new Date(applicant.dateHired)
-                    : applicant?.dateHired.toDate()
-                ).format("D MMM YYYY")}
+          <Group wrap="nowrap" gap={"xs"}>
+            <UserAvatar userId={applicant.applicantUid} />
+            <div>
+              <Text size="16px" fw={500} c="#000000">
+                {applicant.applicantName}
               </Text>
-            </Group>
+              <Space h="5px" />
+              <Group wrap="nowrap" gap={3}>
+                <Text size="sm" fw={400} c="#596258">
+                  Hired at{" "}
+                  {moment(
+                    typeof applicant?.dateHired === "string"
+                      ? new Date(applicant.dateHired)
+                      : applicant?.dateHired.toDate()
+                  ).format("D MMM YYYY")}
+                </Text>
+              </Group>
 
-            {job?.hasBidding && (
-              <Badge
-                mt={"xs"}
-                variant="light"
-                color="#6247BA"
-                size="md"
-                radius={"xl"}
-                fw={500}
-              >
-                <NumberFormatter
-                  prefix={`${job?.currency ? job.currency.code : "TZS"} `}
-                  value={applicant.amount}
-                  thousandSeparator
-                />
-              </Badge>
-            )}
-          </div>
-        </Group>
+              {job?.hasBidding && (
+                <Badge
+                  mt={"xs"}
+                  variant="light"
+                  color="#6247BA"
+                  size="md"
+                  radius={"xl"}
+                  fw={500}
+                >
+                  <NumberFormatter
+                    prefix={`${job?.currency ? job.currency.code : "TZS"} `}
+                    value={applicant.amount}
+                    thousandSeparator
+                  />
+                </Badge>
+              )}
+            </div>
+          </Group>
         </UnstyledButton>
         <Group wrap="nowrap" gap={8}>
           <Badge
@@ -289,15 +290,15 @@ export default function PostedJobDetails() {
           >
             {applicant.status ?? "N/A"}
           </Badge>
-          
+
         </Group>
       </Group>
     </Paper>
   ));
-  
+
   return (
     <div>
-      
+
       <Group wrap="wrap" justify="space-between" align="start">
         <Group justify="start">
           <UnstyledButton onClick={() => navigate(-1)}>
@@ -313,12 +314,12 @@ export default function PostedJobDetails() {
         <Grid.Col span={{ base: 12, md: 6, lg: 8 }} order={{ base: 2, md: 1 }}>
           {job ? (
             <>
-              
+
               <Card p={"md"} radius={"md"}>
                 <div>
                   <Group justify="space-between" wrap="nowrap" align="start">
                     <Text size="18px" fw={600} c="#141514">
-                      {job.title ? job.title : job.category}
+                      {job.title ? job.title : getCategoryText(job.category)}
                     </Text>
                     {job && (
                       <Badge
@@ -377,7 +378,7 @@ export default function PostedJobDetails() {
                     {job.description}
                   </Text>
 
-                 
+
                 </Spoiler>
               </Card>
               <Space h="md" />
@@ -411,17 +412,15 @@ export default function PostedJobDetails() {
                       </Text>
                       <Text size="16px" fw={700} c="#151F42">
                         <NumberFormatter
-                          prefix={`${
-                            job.currency ? job.currency.code : "TZS"
-                          } `}
+                          prefix={`${job.currency ? job.currency.code : "TZS"
+                            } `}
                           value={job.budget}
                           thousandSeparator
                         />
                         {job.maxBudget > 0 && (
                           <NumberFormatter
-                            prefix={` - ${
-                              job.currency ? job.currency.code : "TZS"
-                            } `}
+                            prefix={` - ${job.currency ? job.currency.code : "TZS"
+                              } `}
                             value={job.maxBudget}
                             thousandSeparator
                           />
@@ -488,11 +487,11 @@ export default function PostedJobDetails() {
                         <IoTimeOutline size={14} color="#596258" />
                         <Text size="14px" fw={400} c="#596258">
                           Joined{" "}
-                          {job.userDateJoined?moment(
+                          {job.userDateJoined ? moment(
                             typeof job.userDateJoined === "string"
                               ? new Date(job.userDateJoined)
                               : timestampToISO(job.userDateJoined.seconds ?? 0, job.userDateJoined.nanoseconds ?? 0)
-                          ).format("MMMM YYYY"):"NA"}
+                          ).format("MMMM YYYY") : "NA"}
                         </Text>
                       </Group>
                       <Group wrap="nowrap" gap={3} mt={4}>
@@ -535,11 +534,10 @@ export default function PostedJobDetails() {
                     <button
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
-                      className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                        activeTab === tab.id
+                      className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                           ? "bg-[#151F42] text-white shadow-sm"
                           : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
-                      }`}
+                        }`}
                     >
                       {tab.label}
                     </button>
@@ -599,11 +597,10 @@ export default function PostedJobDetails() {
                     <button
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
-                      className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                        activeTab === tab.id
+                      className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                           ? "bg-[#151F42] text-white shadow-sm"
                           : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
-                      }`}
+                        }`}
                     >
                       {tab.label}
                     </button>

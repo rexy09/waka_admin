@@ -4,15 +4,13 @@ import {
   Group,
   NumberFormatter,
   Space,
-  Text,
-  UnstyledButton,
+  Text
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import useIsAuthenticated from "react-auth-kit/hooks/useIsAuthenticated";
-import { FiBookmark } from "react-icons/fi";
 import { IoTimeOutline } from "react-icons/io5";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +18,7 @@ import { Icons } from "../../../../common/icons";
 import { IUser } from "../../../auth/types";
 import { useJobServices } from "../services";
 import { IJobPost } from "../types";
+import { getCategoryText } from "../utils";
 interface Props {
   job: IJobPost;
 }
@@ -133,26 +132,14 @@ export default function JobCard({ job }: Props) {
                     {job.fullName}
                   </Text>
                   <div onClick={handleSaveToggle} style={{ cursor: "pointer" }}>
-                    <UnstyledButton
-                      variant="subtle"
-                      color={isSaved ? "#151F42" : "#C7C7C7"}
-                      size={"md"}
-                      disabled={checkingStatus || isLoading}
-                      style={{
-                        opacity: checkingStatus || isLoading ? 0.5 : 1,
-                        cursor:
-                          isLoading || checkingStatus
-                            ? "not-allowed"
-                            : "pointer",
-                        pointerEvents: "none", // Prevent button from handling click
-                      }}
+                    <div
+                      className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold ${job.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
                     >
-                      <FiBookmark
-                        size={16}
-                        fill={isSaved ? "#151F42" : "none"}
-                        color={isSaved ? "#151F42" : "#C7C7C7"}
-                      />
-                    </UnstyledButton>
+                      {job.isActive ? "Active" : "Closed"}
+                    </div>
                   </div>
                 </Group>
                 <Text
@@ -162,7 +149,7 @@ export default function JobCard({ job }: Props) {
                   lineClamp={1}
                   style={{ lineHeight: 1.2 }}
                 >
-                  {job.title ? job.title : job.category}
+                  {job.title ? job.title : getCategoryText(job.category)}
                 </Text>
                 <Group wrap="nowrap" gap={2} mt={2}>
                   <IoTimeOutline size={10} />
@@ -185,7 +172,7 @@ export default function JobCard({ job }: Props) {
                 lineClamp={1}
                 style={{ lineHeight: 1.2 }}
               >
-                {job.category}
+                {getCategoryText(job.category)}
               </Text>
               <Group wrap="nowrap" gap={3}>
                 {Icons.location2}
@@ -260,11 +247,10 @@ export default function JobCard({ job }: Props) {
                 />
               </Text>
               <span
-                className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${
-                  job.isProduction
-                    ? "bg-green-100 text-green-800"
+                className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.isProduction
+                  ? "bg-blue-100 text-blue-800"
                     : "bg-yellow-100 text-yellow-800"
-                }`}
+                  }`}
               >
                 {job.isProduction ? "Production" : "Development"}
               </span>

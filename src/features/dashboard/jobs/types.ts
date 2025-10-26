@@ -16,7 +16,7 @@ export interface IJobPost {
   avatarUrl: string;
   biddingType: string | null;
   budget: number;
-  category: string;
+  category: string | ICategory;
   commitment: string;
   country: {
     code: string;
