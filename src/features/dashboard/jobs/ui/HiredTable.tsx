@@ -1,8 +1,4 @@
-import {
-  Badge,
-  Table,
-  Text
-} from "@mantine/core";
+import { Badge, Table, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { DocumentSnapshot } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
@@ -29,7 +25,11 @@ export default function HiredTable() {
     ) => {
       setIsLoading(true);
       try {
-        const result = await getHiredJobs(direction, startAfterDoc, endBeforeDoc);
+        const result = await getHiredJobs(
+          direction,
+          startAfterDoc,
+          endBeforeDoc
+        );
         setHiredJobs(result.data);
         setTotalJobs(result.count);
         setLastDoc(result.lastDoc);
@@ -60,10 +60,8 @@ export default function HiredTable() {
     [fetchHiredJobs, lastDoc]
   );
 
-
   const handleViewJobDetails = (job: IHiredJob) => {
     navigate("/jobs/" + job.jobId);
-    
   };
 
   useEffect(() => {
@@ -99,33 +97,39 @@ export default function HiredTable() {
           {job.jobTitle || "Untitled Job"}
         </Text>
       </Table.Td>
-     
+
       <Table.Td>
         <Badge variant="light" color="blue" size="md">
-          {job.applicantsCount || 0} applicant{job.applicantsCount !== 1 ? 's' : ''}
+          {job.applicantsCount || 0} applicant
+          {job.applicantsCount !== 1 ? "s" : ""}
         </Badge>
       </Table.Td>
       <Table.Td>
-        <Badge 
-          variant="light" 
-          color={job.completedApplicants && job.completedApplicants > 0 ? "green" : "gray"} 
+        <Badge
+          variant="light"
+          color={
+            job.completedApplicants && job.completedApplicants > 0
+              ? "green"
+              : "gray"
+          }
           size="md"
         >
-          {job.completedApplicants || 0} applicant{job.completedApplicants !== 1 ? 's' : ''}
+          {job.completedApplicants || 0} applicant
+          {job.completedApplicants !== 1 ? "s" : ""}
         </Badge>
       </Table.Td>
       <Table.Td>
         <Text size="sm">
           {job.dateHired
             ? new Date(
-              typeof job.dateHired === "string"
-                ? job.dateHired
-                : (job.dateHired as any).toDate?.() || job.dateHired
-            ).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            })
+                typeof job.dateHired === "string"
+                  ? job.dateHired
+                  : (job.dateHired as any).toDate?.() || job.dateHired
+              ).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
             : "-"}
         </Text>
       </Table.Td>
@@ -156,8 +160,6 @@ export default function HiredTable() {
         showPagination={true}
         fetchData={handlePagination}
       />
-
-      
     </>
   );
 }

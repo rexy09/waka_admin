@@ -7,7 +7,7 @@ import {
   ScrollArea,
   Space,
   Stack,
-  Text
+  Text,
 } from "@mantine/core";
 
 import mainLogo from "../../../../assets/logo_white.svg";
@@ -34,10 +34,7 @@ function Sidebar({ setOpened }: SidebarProps) {
   // const { hasRight } = useUserAuth();
 
   return (
-    <nav
-      className={classes.navbar}
-      style={{ backgroundColor: "#151F42" }}
-    >
+    <nav className={classes.navbar} style={{ backgroundColor: "#151F42" }}>
       <Group justify="flex-end" hiddenFrom="md">
         <CloseButton
           title="Close"
@@ -55,7 +52,7 @@ function Sidebar({ setOpened }: SidebarProps) {
       >
         <ScrollArea h={"100vh"}>
           <div>
-            <Group  justify="center">
+            <Group justify="center">
               <Image w={"200px"} src={mainLogo} alt="logo image" />
             </Group>
 
@@ -84,7 +81,6 @@ function Sidebar({ setOpened }: SidebarProps) {
                 iconKey={"people"}
               />
 
-              
               <NavLinkButton
                 setOpened={setOpened}
                 to={"/jobs"}
@@ -95,6 +91,18 @@ function Sidebar({ setOpened }: SidebarProps) {
                 setOpened={setOpened}
                 to={"/hired_jobs"}
                 label={"Hired Jobs"}
+                iconKey={"wallet"}
+              />
+              <NavLinkButton
+                setOpened={setOpened}
+                to={"/user_verification"}
+                label={"Verifications"}
+                iconKey={"wallet"}
+              />
+              <NavLinkButton
+                setOpened={setOpened}
+                to={"/job_reports"}
+                label={"Job Reports"}
                 iconKey={"wallet"}
               />
 
@@ -125,7 +133,6 @@ function Sidebar({ setOpened }: SidebarProps) {
                 iconKey={"report"}
               />
 
-             
               <NavLinkButton
                 setOpened={setOpened}
                 to={"/system_settings"}
@@ -134,13 +141,12 @@ function Sidebar({ setOpened }: SidebarProps) {
               />
               <NavLinkButton
                 setOpened={setOpened}
-                to={"/support"}
-                label={"Report  Issues"}
+                to={"/feedback"}
+                label={"Feedback & Support"}
                 iconKey={"messages"}
               />
             </Stack>
             <Space h="md" />
-
 
             <Button
               leftSection={Icons.logout}

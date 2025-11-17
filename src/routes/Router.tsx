@@ -21,6 +21,8 @@ import BannerPage from "../pages/dashboard/BannerPage";
 import UsersPage from "../pages/dashboard/UsersPage";
 import HiredJobsPage from "../pages/dashboard/HiredJobsPage";
 import UserDetailsPage from "../pages/dashboard/UserDetailsPage";
+import JobReportsPage from "../pages/dashboard/JobReportsPage";
+import UserVerificationPage from "../pages/dashboard/UserVerificationPage";
 export const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -48,6 +50,8 @@ export const router = createBrowserRouter(
         <Route index path="/users/:id" element={<UserDetailsPage />} />
         <Route index path="/notification_center" element={<NotificationCenterPage />} />
         <Route index path="/banner" element={<BannerPage />} />
+        <Route index path="/job_reports" element={<JobReportsPage />} />
+        <Route index path="/user_verification" element={<UserVerificationPage />} />
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="/signin" element={<LoginPage />} />

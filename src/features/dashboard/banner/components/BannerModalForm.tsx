@@ -345,15 +345,7 @@ export default function BannerModalForm({
               backgroundPosition: "center",
             }}
           >
-            {/* Overlay gradient */}
-            <Box
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "linear-gradient(0deg, rgba(51, 65, 85, 0.8) 0%, rgba(51, 65, 85, 0.5) 50%, rgba(51, 65, 85, 0.1) 100%)",
-                zIndex: 1,
-              }}
-            />
+            
 
             {/* YouTube Play Button Overlay */}
             {form.values.youtube_url && form.values.banner_type === "youtube" && (
