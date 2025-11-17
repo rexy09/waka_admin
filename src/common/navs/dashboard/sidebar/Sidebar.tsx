@@ -119,7 +119,7 @@ function Sidebar({ setOpened }: SidebarProps) {
                 iconKey={"personalcard"}
               />
 
-              <NavLinkButton
+              {/* <NavLinkButton
                 setOpened={setOpened}
                 to={"/billing"}
                 label={"Payments"}
@@ -139,12 +139,13 @@ function Sidebar({ setOpened }: SidebarProps) {
                 label={"Settings"}
                 iconKey={"cpu_setting"}
               />
+              */}
               <NavLinkButton
                 setOpened={setOpened}
                 to={"/feedback"}
                 label={"Feedback & Support"}
                 iconKey={"messages"}
-              />
+              /> 
             </Stack>
             <Space h="md" />
 
