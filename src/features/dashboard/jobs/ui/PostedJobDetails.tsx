@@ -1,6 +1,7 @@
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   Center,
   Divider,
@@ -17,7 +18,7 @@ import {
   Stack,
   Tabs,
   Text,
-  UnstyledButton
+  UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import moment from "moment";
@@ -38,6 +39,7 @@ import {
   IJobPost,
 } from "../types";
 import { getCategoryText } from "../utils";
+import { FaMapMarkedAlt } from "react-icons/fa";
 
 export default function PostedJobDetails() {
   const navigate = useNavigate();
@@ -147,6 +149,13 @@ export default function PostedJobDetails() {
   }, [job]);
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
+  };
+  const openGoogleMaps = () => {
+    window.open(
+      `https://maps.google.com?q=${job?.location.latitude},${job?.location.longitude
+      } (${encodeURIComponent(job?.location.address ?? "")})`,
+      "_blank"
+    );
   };
 
   const applicationsCards = applications.map((application) => (
@@ -360,7 +369,13 @@ export default function PostedJobDetails() {
                 <Space h="xs" />
 
                 <Spoiler maxHeight={146} showLabel="Show more" hideLabel="Hide">
-                  <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>
+                  <pre
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      margin: 0,
+                      fontFamily: "inherit",
+                    }}
+                  >
                     {job.description}
                   </pre>
                 </Spoiler>
@@ -372,11 +387,23 @@ export default function PostedJobDetails() {
                   <Text size="20px" fw={500} c="#141514">
                     Location
                   </Text>
-                  <Group wrap="nowrap" gap={3} mt={"xs"}>
-                    <IoLocationOutline />
-                    <Text size="14px" fw={400} c="#596258">
-                      {job.location.address}
-                    </Text>
+                  <Group wrap="nowrap" justify="space-between" align="center">
+                    <Group wrap="nowrap" gap={3} mt={"xs"}>
+                      <IoLocationOutline />
+                      <Text size="14px" fw={400} c="#596258">
+                        {job.location.address}
+                      </Text>
+                    </Group>
+                    <Button
+                      variant="light"
+                      color="violet"
+                      size="sm"
+                      radius="md"
+                      onClick={() => openGoogleMaps()}
+                      leftSection={<FaMapMarkedAlt />}
+                    >
+                      Open Map
+                    </Button>
                   </Group>
                 </div>
               </Card>
@@ -534,7 +561,7 @@ export default function PostedJobDetails() {
                           : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
                         }`}
                     >
-                      {tab.label}
+                      {tab.label} {tab.id === "hired" && `(${hiredApplications.length})`} {tab.id === "applicants" && `(${applications.length})`}
                     </button>
                   ))}
                 </div>
@@ -549,7 +576,12 @@ export default function PostedJobDetails() {
                       </Center>
                     </Paper>
                   ) : applicationsCards.length > 0 ? (
-                    applicationsCards
+                    <ScrollArea
+                      style={{ height: "calc(100vh - 40vh)" }}
+                      scrollbars="y"
+                    >
+                      {applicationsCards}
+                    </ScrollArea>
                   ) : (
                     <Paper withBorder p={"xs"} radius={"md"}>
                       <Text size="sm" c="#7F7D7D" ta={"center"}>
@@ -566,7 +598,12 @@ export default function PostedJobDetails() {
                       </Center>
                     </Paper>
                   ) : hiredCards.length > 0 ? (
-                    hiredCards
+                    <ScrollArea
+                      style={{ height: "calc(100vh - 40vh)" }}
+                      scrollbars="y"
+                    >
+                      {hiredCards}
+                    </ScrollArea>
                   ) : (
                     <Paper withBorder p={"xs"} radius={"md"}>
                       <Text size="sm" c="#7F7D7D" ta={"center"}>
@@ -605,20 +642,20 @@ export default function PostedJobDetails() {
               <Space h="lg" />
               <Tabs value={activeTab} keepMounted={false}>
                 <Tabs.Panel value="applicants">
-                  <ScrollArea
-                    style={{ height: "calc(100vh - 45vh)" }}
-                    scrollbars="y"
-                  >
-                    {bidsCards.length > 0 ? (
-                      bidsCards
-                    ) : (
-                      <Paper withBorder p={"xs"} radius={"md"}>
-                        <Text size="sm" c="#7F7D7D" ta={"center"}>
-                          No bid applications yet.
-                        </Text>
-                      </Paper>
-                    )}
-                  </ScrollArea>
+                  {bidsCards.length > 0 ? (
+                    <ScrollArea
+                      style={{ height: "calc(100vh - 40vh)" }}
+                      scrollbars="y"
+                    >
+                      {bidsCards}
+                    </ScrollArea>
+                  ) : (
+                    <Paper withBorder p={"xs"} radius={"md"}>
+                      <Text size="sm" c="#7F7D7D" ta={"center"}>
+                        No bid applications yet.
+                      </Text>
+                    </Paper>
+                  )}
                 </Tabs.Panel>
                 <Tabs.Panel value="hired">
                   {loadingHired ? (
@@ -628,7 +665,12 @@ export default function PostedJobDetails() {
                       </Center>
                     </Paper>
                   ) : hiredCards.length > 0 ? (
-                    hiredCards
+                    <ScrollArea
+                      style={{ height: "calc(100vh - 40vh)" }}
+                      scrollbars="y"
+                    >
+                      {hiredCards}
+                    </ScrollArea>
                   ) : (
                     <Paper withBorder p={"xs"} radius={"md"}>
                       <Text size="sm" c="#7F7D7D" ta={"center"}>
