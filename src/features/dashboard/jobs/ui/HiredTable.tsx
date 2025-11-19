@@ -10,7 +10,6 @@ import { IHiredJob } from "../types";
 
 export default function HiredTable() {
   const navigate = useNavigate();
-
   const { getHiredJobs } = useJobServices();
   const [hiredJobs, setHiredJobs] = useState<IHiredJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,8 +76,9 @@ export default function HiredTable() {
       >
         Job Title
       </Table.Th>
-      <Table.Th>Applicants</Table.Th>
+      <Table.Th>Hired</Table.Th>
       <Table.Th>Completed</Table.Th>
+      <Table.Th>Approved</Table.Th>
       <Table.Th>Date Hired</Table.Th>
       <Table.Th
         style={{
@@ -99,11 +99,16 @@ export default function HiredTable() {
       </Table.Td>
 
       <Table.Td>
-        <Badge variant="light" color="blue" size="md">
+        <Badge
+          variant="light"
+          color={(job.applicantsCount ?? 0) > 0 ? "blue" : "yellow"}
+          size="md"
+        >
           {job.applicantsCount || 0} applicant
           {job.applicantsCount !== 1 ? "s" : ""}
         </Badge>
       </Table.Td>
+      
       <Table.Td>
         <Badge
           variant="light"
@@ -119,17 +124,31 @@ export default function HiredTable() {
         </Badge>
       </Table.Td>
       <Table.Td>
+        <Badge
+          variant="light"
+          color={
+            job.approvedApplicants && job.approvedApplicants > 0
+              ? "violet"
+              : "gray"
+          }
+          size="md"
+        >
+          {job.approvedApplicants || 0} applicant
+          {job.approvedApplicants !== 1 ? "s" : ""}
+        </Badge>
+      </Table.Td>
+      <Table.Td>
         <Text size="sm">
           {job.dateHired
             ? new Date(
-                typeof job.dateHired === "string"
-                  ? job.dateHired
-                  : (job.dateHired as any).toDate?.() || job.dateHired
-              ).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+              typeof job.dateHired === "string"
+                ? job.dateHired
+                : (job.dateHired as any).toDate?.() || job.dateHired
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
             : "-"}
         </Text>
       </Table.Td>
@@ -152,7 +171,7 @@ export default function HiredTable() {
       <CustomTable
         columns={columns}
         rows={rows}
-        colSpan={5}
+        colSpan={6}
         totalData={totalJobs}
         isLoading={isLoading}
         title="Hired Jobs"

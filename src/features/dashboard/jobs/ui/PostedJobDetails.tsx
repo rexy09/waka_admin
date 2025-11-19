@@ -42,13 +42,8 @@ import { getCategoryText } from "../utils";
 export default function PostedJobDetails() {
   const navigate = useNavigate();
 
-
-  const {
-    getJob,
-    getJobBids,
-    getJobApplications,
-    getAllHiredJobApplications,
-  } = useJobServices();
+  const { getJob, getJobBids, getJobApplications, getAllHiredJobApplications } =
+    useJobServices();
   const { id } = useParams();
 
   const [_isLoading, setIsLoading] = useState(false);
@@ -66,10 +61,6 @@ export default function PostedJobDetails() {
     { id: "applicants", label: "Applicants" },
     { id: "hired", label: "Hired" },
   ];
-
-
-
-
 
   const fetchJobApplications = async () => {
     if (!job) return;
@@ -161,89 +152,79 @@ export default function PostedJobDetails() {
   const applicationsCards = applications.map((application) => (
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={application.id}>
       <Group wrap="nowrap" align="center" justify="space-between">
-        <Group wrap="nowrap" gap={"xs"}>
-          <UserAvatar userId={application.uid} />
-          <div>
-            <Text size="16px" fw={500} c="#000000">
-              {application.applicantName}
-            </Text>
-            <Space h="5px" />
-            <Group wrap="nowrap" gap={3}>
-              {/* <IoTimeOutline size={14} color="#596258" /> */}
-              <Text size="14px" fw={400} c="#596258">
-                Applied at{" "}
-                {moment(
-                  typeof application.dateAdded === "string"
-                    ? new Date(application.dateAdded)
-                    : application.dateAdded.toDate()
-                ).format("DD MMMM YYYY")}
+        <UnstyledButton onClick={() => navigate(`/users/${application.uid}`)}>
+          <Group wrap="nowrap" gap={"xs"}>
+            <UserAvatar userId={application.uid} />
+            <div>
+              <Text size="16px" fw={500} c="#000000">
+                {application.applicantName}
               </Text>
-            </Group>
-          </div>
-        </Group>
-        {/* {application.status != "accepted" && (
-          <Button
-            variant="filled"
-            color="#151F42"
-            size="xs"
-            radius={"xl"}
-            fw={500}
-            disabled={loadingUnemployment === application.uid}
-            loading={loadingUnemployment === application.uid}
-            onClick={() => handleEmployApplicantFromJob(application.uid)}
-          >
-            Employ
-          </Button>
-        )} */}
+              <Space h="5px" />
+              <Group wrap="nowrap" gap={3}>
+                {/* <IoTimeOutline size={14} color="#596258" /> */}
+                <Text size="14px" fw={400} c="#596258">
+                  Applied at{" "}
+                  {moment(
+                    typeof application.dateAdded === "string"
+                      ? new Date(application.dateAdded)
+                      : application.dateAdded.toDate()
+                  ).format("DD MMMM YYYY")}
+                </Text>
+              </Group>
+            </div>
+          </Group>
+        </UnstyledButton>
       </Group>
     </Paper>
   ));
   const bidsCards = bids.map((bid) => (
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={bid.id}>
       <Group wrap="nowrap" align="center" justify="space-between">
-        <Group wrap="nowrap" gap={"xs"}>
-          <UserAvatar userId={bid.bidderId} />
-          <div>
-            <Text size="16px" fw={500} c="#000000">
-              {bid.bidderName}
-            </Text>
-            <Space h="5px" />
-            <Group wrap="nowrap" gap={3}>
-              <Text size="14px" fw={400} c="#596258">
-                Bid at{" "}
-                {moment(
-                  typeof bid?.dateAdded === "string"
-                    ? new Date(bid.dateAdded)
-                    : bid?.dateAdded.toDate()
-                ).format("D MMM YYYY  hh:mm A")}
+        <UnstyledButton onClick={() => navigate(`/users/${bid.bidderId}`)}>
+          <Group wrap="nowrap" gap={"xs"}>
+            <UserAvatar userId={bid.bidderId} />
+            <div>
+              <Text size="16px" fw={500} c="#000000">
+                {bid.bidderName}
               </Text>
-            </Group>
-            <Badge
-              mt={"xs"}
-              variant="light"
-              color="#6247BA"
-              size="md"
-              radius={"xl"}
-              fw={500}
-            >
-              <NumberFormatter
-                prefix={`${job?.currency ? job.currency.code : "TZS"} `}
-                value={bid.amount}
-                thousandSeparator
-              />
-            </Badge>
-          </div>
-        </Group>
-        <Stack align="end">
-
-        </Stack>
+              <Space h="5px" />
+              <Group wrap="nowrap" gap={3}>
+                <Text size="14px" fw={400} c="#596258">
+                  Bid at{" "}
+                  {moment(
+                    typeof bid?.dateAdded === "string"
+                      ? new Date(bid.dateAdded)
+                      : bid?.dateAdded.toDate()
+                  ).format("D MMM YYYY  hh:mm A")}
+                </Text>
+              </Group>
+              <Badge
+                mt={"xs"}
+                variant="light"
+                color="#6247BA"
+                size="md"
+                radius={"xl"}
+                fw={500}
+              >
+                <NumberFormatter
+                  prefix={`${job?.currency ? job.currency.code : "TZS"} `}
+                  value={bid.amount}
+                  thousandSeparator
+                />
+              </Badge>
+            </div>
+          </Group>
+        </UnstyledButton>
+        <Stack align="end"></Stack>
       </Group>
     </Paper>
   ));
   const hiredCards = hiredApplications.map((applicant, index) => (
     <Paper withBorder p={"xs"} radius={"md"} mb={"sm"} key={index}>
       <Group wrap="nowrap" align="center" justify="space-between">
-        <UnstyledButton onClick={() => navigate(`/users/${applicant.applicantUid}`)}>
+        <UnstyledButton
+          onClick={() => navigate(`/users/${applicant.applicantUid}`)}
+        >
           <Group wrap="nowrap" gap={"xs"}>
             <UserAvatar userId={applicant.applicantUid} />
             <div>
@@ -284,13 +265,20 @@ export default function PostedJobDetails() {
         <Group wrap="nowrap" gap={8}>
           <Badge
             variant="light"
-            color={applicant.status === "completed" ? "green" : applicant.status === "in_progress" ? "blue" : "gray"}
+            color={
+              applicant.status === "completed"
+                ? "green"
+                : applicant.status === "approved"
+                  ? "blue"
+                  : applicant.status === "pending"
+                    ? "gray"
+                    : "gray"
+            }
             size="sm"
             radius="xl"
           >
             {applicant.status ?? "N/A"}
           </Badge>
-
         </Group>
       </Group>
     </Paper>
@@ -298,7 +286,6 @@ export default function PostedJobDetails() {
 
   return (
     <div>
-
       <Group wrap="wrap" justify="space-between" align="start">
         <Group justify="start">
           <UnstyledButton onClick={() => navigate(-1)}>
@@ -314,7 +301,6 @@ export default function PostedJobDetails() {
         <Grid.Col span={{ base: 12, md: 6, lg: 8 }} order={{ base: 2, md: 1 }}>
           {job ? (
             <>
-
               <Card p={"md"} radius={"md"}>
                 <div>
                   <Group justify="space-between" wrap="nowrap" align="start">
@@ -374,11 +360,9 @@ export default function PostedJobDetails() {
                 <Space h="xs" />
 
                 <Spoiler maxHeight={146} showLabel="Show more" hideLabel="Hide">
-                  <Text size="md" fw={400} c="#7F7D7D">
+                  <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: 'inherit' }}>
                     {job.description}
-                  </Text>
-
-
+                  </pre>
                 </Spoiler>
               </Card>
               <Space h="md" />
@@ -470,48 +454,59 @@ export default function PostedJobDetails() {
                   <Text size="20px" fw={500} c="#141514">
                     About Employer
                   </Text>
-                  <Space h="xs" />
-                  <Group wrap="nowrap" align="start">
-                    <Avatar
-                      w="50px"
-                      h="50px"
-                      radius={"xl"}
-                      src={job.avatarUrl}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <Text size="16px" fw={500} c="#000000">
-                        {job.fullName}
-                      </Text>
-                      <Space h="xs" />
-                      <Group wrap="nowrap" gap={3}>
-                        <IoTimeOutline size={14} color="#596258" />
-                        <Text size="14px" fw={400} c="#596258">
-                          Joined{" "}
-                          {job.userDateJoined ? moment(
-                            typeof job.userDateJoined === "string"
-                              ? new Date(job.userDateJoined)
-                              : timestampToISO(job.userDateJoined.seconds ?? 0, job.userDateJoined.nanoseconds ?? 0)
-                          ).format("MMMM YYYY") : "NA"}
+                  <Space h="md" />
+                  <UnstyledButton
+                    onClick={() => navigate(`/users/${job.postedByUserId}`)}
+                  >
+                    <Group wrap="nowrap" align="start">
+                      <Avatar
+                        w="50px"
+                        h="50px"
+                        radius={"xl"}
+                        src={job.avatarUrl}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <Text size="16px" fw={500} c="#000000">
+                          {job.fullName}
                         </Text>
-                      </Group>
-                      <Group wrap="nowrap" gap={3} mt={4}>
-                        <MdBusinessCenter size={14} color="#596258" />
-                        <Text size="14px" fw={400} c="#596258">
-                          {job.numberOfPostedJobsByUser}{" "}
-                          {job.numberOfPostedJobsByUser === 1 ? "job" : "jobs"}{" "}
-                          posted
-                        </Text>
-                      </Group>
-                      {job.isUserVerified && (
-                        <Group wrap="nowrap" gap={3} mt={4}>
-                          <MdVerified size={14} color="#44A047" />
-                          <Text size="14px" fw={400} c="#44A047">
-                            Verified employer
+                        <Space h="xs" />
+                        <Group wrap="nowrap" gap={3}>
+                          <IoTimeOutline size={14} color="#596258" />
+                          <Text size="14px" fw={400} c="#596258">
+                            Joined{" "}
+                            {job.userDateJoined
+                              ? moment(
+                                typeof job.userDateJoined === "string"
+                                  ? new Date(job.userDateJoined)
+                                  : timestampToISO(
+                                    job.userDateJoined.seconds ?? 0,
+                                    job.userDateJoined.nanoseconds ?? 0
+                                  )
+                              ).format("MMMM YYYY")
+                              : "NA"}
                           </Text>
                         </Group>
-                      )}
-                    </div>
-                  </Group>
+                        <Group wrap="nowrap" gap={3} mt={4}>
+                          <MdBusinessCenter size={14} color="#596258" />
+                          <Text size="14px" fw={400} c="#596258">
+                            {job.numberOfPostedJobsByUser}{" "}
+                            {job.numberOfPostedJobsByUser === 1
+                              ? "job"
+                              : "jobs"}{" "}
+                            posted
+                          </Text>
+                        </Group>
+                        {job.isUserVerified && (
+                          <Group wrap="nowrap" gap={3} mt={4}>
+                            <MdVerified size={14} color="#44A047" />
+                            <Text size="14px" fw={400} c="#44A047">
+                              Verified employer
+                            </Text>
+                          </Group>
+                        )}
+                      </div>
+                    </Group>
+                  </UnstyledButton>
                 </div>
               </Card>
             </>

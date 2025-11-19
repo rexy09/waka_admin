@@ -215,7 +215,7 @@ export default function NotificationCenter() {
                       <Text size="sm" fw={600}>
                         {form.values.title || "Notification Title"}
                       </Text>
-                        <Text size="sm" className="break-words overflow-hidden" >
+                        <Text size="xs" className="break-words overflow-hidden" >
                         {form.values.body ||
                           "Your notification message will appear here"}
                       </Text>

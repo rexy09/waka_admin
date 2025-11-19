@@ -16,7 +16,7 @@ import {
   startAfter,
   Timestamp,
   updateDoc,
-  where,
+  where
 } from "firebase/firestore";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import { v4 as uuidv4 } from "uuid";
@@ -768,8 +768,11 @@ export const useJobServices = () => {
         // Optionally get applicants count for each hired job
         const applicantsCollection = collection(doc.ref, "applicants");
         const applicantsSnapshot = await getDocs(applicantsCollection);
-        const completedApplicants = applicantsSnapshot.docs.filter(doc => 
+        const completedApplicants = applicantsSnapshot.docs.filter(doc =>
           doc.data().status === "completed"
+        );
+        const approvedApplicants = applicantsSnapshot.docs.filter(
+          (doc) => doc.data().status === "approved"
         );
 
         return {
@@ -777,6 +780,7 @@ export const useJobServices = () => {
           id: doc.id,
           applicantsCount: applicantsSnapshot.size,
           completedApplicants: completedApplicants.length,
+          approvedApplicants: approvedApplicants.length,
         } as IHiredJob;
       })
     );
@@ -989,3 +993,5 @@ export const useJobServices = () => {
     getHiredJobs,
   };
 };
+
+

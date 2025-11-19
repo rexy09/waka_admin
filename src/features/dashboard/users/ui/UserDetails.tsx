@@ -4,29 +4,40 @@ import {
     Button,
     Card,
     Container,
+    Divider,
     Grid,
     Group,
     Loader,
     Paper,
+    Space,
     Stack,
     Text,
     Title,
-    Tooltip
+    Tooltip,
+    UnstyledButton,
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
 import {
+    MdApartment,
     MdArrowBack,
+    MdBusinessCenter,
     MdContentCopy,
     MdEmail,
+    MdPerson,
     MdPhone,
     MdPublic,
-    MdVerifiedUser
+    MdSecurity,
+    MdVerifiedUser,
+    MdMale,
+    MdFemale,
+    MdTransgender,
 } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
 import { IUser } from "../../../auth/types";
 import { useUserServices } from "../services";
+import { IoArrowBack } from "react-icons/io5";
 
 function UserDetails() {
     const { id } = useParams<{ id: string }>();
@@ -112,293 +123,393 @@ function UserDetails() {
         );
     }
 
+    const getMetricValue = (keys: string[]) => {
+        const record = user as unknown as Record<string, unknown>;
+        for (const key of keys) {
+            const value = record?.[key];
+            if (typeof value === "number") {
+                return value;
+            }
+        }
+        return 0;
+    };
+
+    const formatCount = (count: number) => String(count).padStart(2, "0");
+
+    const userStats = [
+        {
+            label: "Applied",
+            value: getMetricValue([
+                "appliedJobsCount",
+                "appliedCount",
+                "applicationsCount",
+            ]),
+        },
+        {
+            label: "Hired",
+            value: getMetricValue(["hiredJobsCount", "hiredCount"]),
+        },
+        {
+            label: "Saved Jobs",
+            value: getMetricValue(["savedJobsCount", "savedJobs"]),
+        },
+    ];
+
+    const profileBadges = [
+        {
+            key: "type",
+            label: (user.userType || "unknown").replace(/^\w/, (char) =>
+                char.toUpperCase()
+            ),
+            color:
+                user.userType === "individual"
+                    ? "teal"
+                    : user.userType === "institute"
+                        ? "violet"
+                        : "gray",
+            icon:
+                user.userType === "individual" ? (
+                    <MdPerson size={14} />
+                ) : user.userType === "institute" ? (
+                    <MdApartment size={14} />
+                ) : (
+                    <MdBusinessCenter size={14} />
+                ),
+        },
+        {
+            key: "role",
+            label: user.role,
+            color: user.role === "admin" ? "red" : "indigo",
+            icon: <MdSecurity size={14} />,
+        },
+        {
+            key: "status",
+            label: user.status || "Active",
+            color: user.status === "Active" ? "green" : "gray",
+            icon: <MdVerifiedUser size={14} />,
+        },
+    ];
+
     return (
-        <Container size="lg" py="xl">
-            <Stack gap="lg">
-                {/* Header with Back Button */}
-                <Group justify="space-between" align="center">
-                    <Button
-                        variant="subtle"
-                        leftSection={<MdArrowBack />}
-                        onClick={handleBack}
-                    >
-                        Back to Users
-                    </Button>
+        <Stack gap="md">
+            <Group wrap="wrap" justify="space-between" align="start">
+                <Group justify="start">
+                    <UnstyledButton onClick={() => navigate(-1)}>
+                        <IoArrowBack size={20} />
+                    </UnstyledButton>
+                    <Text size="28px" fw={700} c="#141514">
+                        User Details
+                    </Text>
                 </Group>
+            </Group>
+            <Divider />
 
-                {/* User Profile Card */}
-                <Card shadow="sm" padding="xl" radius="md" withBorder>
-                    <Group align="flex-start" gap="xl" wrap="nowrap">
-                        <Avatar
-                            src={user.avatarURL}
-                            size={120}
-                            radius="lg"
-                            className="ring-4 ring-blue-50"
-                        >
-                            {user.fullName?.charAt(0)?.toUpperCase()}
-                        </Avatar>
+            {/* User Profile Card */}
+            <Card shadow="sm" padding="md" radius="md" withBorder>
+                <Group justify="space-between" align="center" gap="xl" wrap="wrap">
+                    <Group align="center" gap="md" wrap="wrap">
+                        <div style={{ position: "relative" }}>
+                            <Avatar
+                                src={user.avatarURL}
+                                size={120}
+                                radius="xl"
+                                className="ring-1 ring-blue-50"
+                            >
+                                {user.fullName?.charAt(0)?.toUpperCase()}
+                            </Avatar>
+                        </div>
 
-                        <Stack gap="sm" style={{ flex: 1 }}>
-                            <div>
-                                <Title order={2}>{user.fullName || "Unknown User"}</Title>
-                                <Group gap="xs" mt="xs">
+                        <Stack gap="xs" style={{ minWidth: 200, flex: 1 }}>
+                            <Title order={2} tt="capitalize">{user.fullName || "Unknown User"}</Title>
+                            <Group gap="sm" wrap="wrap">
+                                {profileBadges.map(({ key, label, color, icon }) => (
                                     <Badge
-                                        variant="light"
-                                        color={
-                                            user.userType === "employer"
-                                                ? "violet"
-                                                : user.userType === "jobseeker"
-                                                    ? "orange"
-                                                    : "gray"
-                                        }
+                                        key={key}
+                                        variant="outline"
+                                        color={color}
+                                        radius="xl"
                                         size="lg"
+                                        leftSection={icon}
+                                        tt="capitalize"
+                                        styles={{
+                                            root: {
+                                                paddingInline: 14,
+                                                borderColor: "rgba(20,20,20,0.12)",
+                                                backgroundColor: "rgba(20,20,20,0.02)",
+                                            },
+                                            label: {
+                                                fontWeight: 600,
+                                                letterSpacing: 0.3,
+                                            },
+                                        }}
                                     >
-                                        {user.userType || "unknown"}
+                                        {label}
                                     </Badge>
-                                    <Badge
-                                        variant="light"
-                                        color={user.role === "admin" ? "red" : "blue"}
-                                        size="lg"
-                                    >
-                                        {user.role}
-                                    </Badge>
-                                    <Badge
-                                        variant="light"
-                                        color={user.status === "active" ? "green" : "gray"}
-                                        size="lg"
-                                    >
-                                        {user.status || "active"}
-                                    </Badge>
-                                </Group>
-                            </div>
+                                ))}
+                            </Group>
+                            <Group gap="sm" wrap="wrap">
+                                <Badge
+                                    variant="light"
+                                    color={
+                                        user.gender === "Male"
+                                            ? "blue"
+                                            : user.gender === "Female"
+                                                ? "pink"
+                                                : "gray"
+                                    }
+                                    radius="xl"
+                                    size="lg"
+                                    tt="capitalize"
+                                    leftSection={
+                                        user.gender === "Male" ? (
+                                            <MdMale size={16} />
+                                        ) : user.gender === "Female" ? (
+                                            <MdFemale size={16} />
+                                        ) : (
+                                            <MdTransgender size={16} />
+                                        )
+                                    }
+                                    styles={{
+                                        root: {
+                                            paddingInline: 14,
+                                        },
+                                        label: {
+                                            fontWeight: 600,
+                                            letterSpacing: 0.3,
+                                        },
+                                    }}
+                                >
+                                    {user.gender || "Not specified"}
+                                </Badge>
+                            </Group>
 
-                            <Group gap="md" mt="sm">
+
+
+                            <Group gap="sm" wrap="wrap">
                                 {user.isVerified && (
                                     <Tooltip label="Verified User">
                                         <Badge
-                                            variant="light"
-                                            color="green"
+                                            variant="gradient"
+                                            gradient={{ from: "teal", to: "green" }}
                                             leftSection={<MdVerifiedUser size={14} />}
+                                            size="lg"
+                                            radius="xl"
+                                            styles={{
+                                                label: { fontWeight: 600 },
+                                            }}
                                         >
                                             Verified
                                         </Badge>
                                     </Tooltip>
                                 )}
-                                <Badge
-                                    variant="light"
-                                    color={user.isProduction ? "blue" : "orange"}
-                                >
-                                    {user.isProduction ? "Production" : "Staging"}
-                                </Badge>
                             </Group>
                         </Stack>
                     </Group>
-                </Card>
-
-                {/* Contact Information */}
-                <Card shadow="sm" padding="lg" radius="md" withBorder>
-                    <Title order={3} mb="md">
-                        Contact Information
-                    </Title>
-                    <Grid>
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Group gap="xs" mb="xs">
-                                    <MdEmail className="text-blue-600" size={20} />
-                                    <Text size="sm" fw={600} c="dimmed">
-                                        Email Address
+                    <Stack gap={"md"}>
+                        <Group justify="flex-end">
+                            <Group gap="xs">
+                                <Text size="sm" fw={500} c={"dimmed"} className="font-mono">
+                                    {user.uid}
+                                </Text>
+                                <Tooltip label="Copy User ID">
+                                    <button
+                                        onClick={() => handleCopy(user.uid, "User ID")}
+                                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                    >
+                                        <MdContentCopy className="text-gray-500" size={16} />
+                                    </button>
+                                </Tooltip>
+                            </Group>
+                        </Group>
+                        <Group gap="xl" align="center" wrap="wrap">
+                            {userStats.map(({ label, value }) => (
+                                <Stack key={label} gap={0} align="center" miw={100}>
+                                    <Text size="36px" fw={700} c="#141414">
+                                        {formatCount(value)}
                                     </Text>
-                                </Group>
-                                <Group gap="xs">
-                                    <Text size="sm" fw={500}>
-                                        {user.email}
+                                    <Text size="sm" c="dimmed">
+                                        {label}
                                     </Text>
-                                    <Tooltip label="Copy email">
-                                        <button
-                                            onClick={() => handleCopy(user.email, "Email")}
-                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                                        >
-                                            <MdContentCopy className="text-gray-500" size={16} />
-                                        </button>
-                                    </Tooltip>
-                                </Group>
-                            </Paper>
-                        </Grid.Col>
-
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Group gap="xs" mb="xs">
-                                    <MdPhone className="text-green-600" size={20} />
-                                    <Text size="sm" fw={600} c="dimmed">
-                                        Phone Number
-                                    </Text>
-                                </Group>
-                                <Group gap="xs">
-                                    <Text size="sm" fw={500}>
-                                        {user.phoneNumber || "Not provided"}
-                                    </Text>
-                                    {user.phoneNumber && (
-                                        <Tooltip label="Copy phone">
-                                            <button
-                                                onClick={() =>
-                                                    handleCopy(user.phoneNumber!, "Phone number")
-                                                }
-                                                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                                            >
-                                                <MdContentCopy className="text-gray-500" size={16} />
-                                            </button>
-                                        </Tooltip>
-                                    )}
-                                </Group>
-                            </Paper>
-                        </Grid.Col>
-
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Group gap="xs" mb="xs">
-                                    <MdPublic className="text-purple-600" size={20} />
-                                    <Text size="sm" fw={600} c="dimmed">
-                                        Country
-                                    </Text>
-                                </Group>
-                                <Text size="sm" fw={500}>
-                                    {user.country?.name || "Not specified"}
-                                </Text>
-                            </Paper>
-                        </Grid.Col>
-
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Group gap="xs" mb="xs">
-                                    <Text size="sm" fw={600} c="dimmed">
-                                        Currency
-                                    </Text>
-                                </Group>
-                                <Text size="sm" fw={500}>
-                                    {user.currency?.name
-                                        ? `${user.currency.name} (${user.currency.symbol})`
-                                        : "Not specified"}
-                                </Text>
-                            </Paper>
-                        </Grid.Col>
-                    </Grid>
-                </Card>
-
-                {/* Account Details */}
-                <Card shadow="sm" padding="lg" radius="md" withBorder>
-                    <Title order={3} mb="md">
-                        Account Details
-                    </Title>
-                    <Grid>
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Text size="sm" fw={600} c="dimmed" mb="xs">
-                                    User ID
-                                </Text>
-                                <Group gap="xs">
-                                    <Text size="sm" fw={500} className="font-mono">
-                                        {user.uid}
-                                    </Text>
-                                    <Tooltip label="Copy User ID">
-                                        <button
-                                            onClick={() => handleCopy(user.uid, "User ID")}
-                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                                        >
-                                            <MdContentCopy className="text-gray-500" size={16} />
-                                        </button>
-                                    </Tooltip>
-                                </Group>
-                            </Paper>
-                        </Grid.Col>
-
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Text size="sm" fw={600} c="dimmed" mb="xs">
-                                    Gender
-                                </Text>
-                                <Text size="sm" fw={500} tt="capitalize">
-                                    {user.gender || "Not specified"}
-                                </Text>
-                            </Paper>
-                        </Grid.Col>
-
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Text size="sm" fw={600} c="dimmed" mb="xs">
-                                    Date Joined
-                                </Text>
-                                <Text size="sm" fw={500}>
-                                    {user.dateAdded
-                                        ? new Date(
-                                            typeof user.dateAdded === "string"
-                                                ? user.dateAdded
-                                                : (user.dateAdded as any).toDate()
-                                        ).toLocaleDateString("en-US", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })
-                                        : "Unknown"}
-                                </Text>
-                            </Paper>
-                        </Grid.Col>
-
-                        <Grid.Col span={{ base: 12, md: 6 }}>
-                            <Paper p="md" className="bg-gray-50 rounded-lg">
-                                <Text size="sm" fw={600} c="dimmed" mb="xs">
-                                    Last Updated
-                                </Text>
-                                <Text size="sm" fw={500}>
-                                    {user.dateUpdated
-                                        ? new Date(
-                                            typeof user.dateUpdated === "string"
-                                                ? user.dateUpdated
-                                                : (user.dateUpdated as any).toDate()
-                                        ).toLocaleDateString("en-US", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })
-                                        : "Unknown"}
-                                </Text>
-                            </Paper>
-                        </Grid.Col>
-                    </Grid>
-                </Card>
-
-                {/* Notification Tokens (Admin Only) */}
-                {user.fcmTokens && user.fcmTokens.length > 0 && (
-                    <Card shadow="sm" padding="lg" radius="md" withBorder>
-                        <Title order={3} mb="md">
-                            Push Notification Tokens
-                        </Title>
-                        <Stack gap="xs">
-                            {user.fcmTokens.map((token, index) => (
-                                <Paper key={index} p="sm" className="bg-gray-50 rounded-lg">
-                                    <Group gap="xs">
-                                        <Text size="xs" className="font-mono flex-1 truncate">
-                                            {token}
-                                        </Text>
-                                        <Tooltip label="Copy token">
-                                            <button
-                                                onClick={() => handleCopy(token, "Token")}
-                                                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                                            >
-                                                <MdContentCopy className="text-gray-500" size={14} />
-                                            </button>
-                                        </Tooltip>
-                                    </Group>
-                                </Paper>
+                                </Stack>
                             ))}
-                        </Stack>
-                    </Card>
+                        </Group>
+                    </Stack>
+                </Group>
+                <Space h="md"/>
+                {(user as any).bio && (
+                    <Paper shadow="0" maw={"70%"}>
+                        <Text size="md" c="dimmed" mb={4} fw={500}>
+                            Biography
+                        </Text>
+                        <Text size="sm" style={{ lineHeight: 1.6 }}>
+                            {(user as any).bio}
+                        </Text>
+                    </Paper>
                 )}
-            </Stack>
-        </Container>
+            </Card>
+
+            {/* Contact Information */}
+            <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Title order={3} mb="md">
+                    Account Information
+                </Title>
+                <Grid>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <div>
+                            <Group gap="xs" mb="xs">
+                                <MdEmail className="text-blue-600" size={20} />
+                                <Text size="sm" fw={600} c="dimmed">
+                                    Email Address
+                                </Text>
+                            </Group>
+                            <Group gap="xs">
+                                <Text size="sm" fw={500}>
+                                    {user.email}
+                                </Text>
+                                <Tooltip label="Copy email">
+                                    <button
+                                        onClick={() => handleCopy(user.email, "Email")}
+                                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                    >
+                                        <MdContentCopy className="text-gray-500" size={16} />
+                                    </button>
+                                </Tooltip>
+                            </Group>
+                        </div>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <div>
+                            <Group gap="xs" mb="xs">
+                                <MdPhone className="text-green-600" size={20} />
+                                <Text size="sm" fw={600} c="dimmed">
+                                    Phone Number
+                                </Text>
+                            </Group>
+                            <Group gap="xs">
+                                <Text size="sm" fw={500}>
+                                    {user.phoneNumber || "Not provided"}
+                                </Text>
+                                {user.phoneNumber && (
+                                    <Tooltip label="Copy phone">
+                                        <button
+                                            onClick={() =>
+                                                handleCopy(user.phoneNumber!, "Phone number")
+                                            }
+                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                        >
+                                            <MdContentCopy className="text-gray-500" size={16} />
+                                        </button>
+                                    </Tooltip>
+                                )}
+                            </Group>
+                        </div>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <div>
+                            <Group gap="xs" mb="xs">
+                                <MdPublic className="text-purple-600" size={20} />
+                                <Text size="sm" fw={600} c="dimmed">
+                                    Country
+                                </Text>
+                            </Group>
+                            <Text size="sm" fw={500}>
+                                {user.country?.name || "Not specified"}
+                            </Text>
+                        </div>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <div>
+                            <Group gap="xs" mb="xs">
+                                <Text size="sm" fw={600} c="dimmed">
+                                    Currency
+                                </Text>
+                            </Group>
+                            <Text size="sm" fw={500}>
+                                {user.currency?.name
+                                    ? `${user.currency.name} (${user.currency.symbol})`
+                                    : "Not specified"}
+                            </Text>
+                        </div>
+                    </Grid.Col>
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <div>
+                            <Text size="sm" fw={600} c="dimmed" mb="xs">
+                                Date Joined
+                            </Text>
+                            <Text size="sm" fw={500}>
+                                {user.dateAdded
+                                    ? new Date(
+                                        typeof user.dateAdded === "string"
+                                            ? user.dateAdded
+                                            : (user.dateAdded as any).toDate()
+                                    ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })
+                                    : "Unknown"}
+                            </Text>
+                        </div>
+                    </Grid.Col>
+
+                    <Grid.Col span={{ base: 12, md: 6 }}>
+                        <div>
+                            <Text size="sm" fw={600} c="dimmed" mb="xs">
+                                Last Updated
+                            </Text>
+                            <Text size="sm" fw={500}>
+                                {user.dateUpdated
+                                    ? new Date(
+                                        typeof user.dateUpdated === "string"
+                                            ? user.dateUpdated
+                                            : (user.dateUpdated as any).toDate()
+                                    ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })
+                                    : "Unknown"}
+                            </Text>
+                        </div>
+                    </Grid.Col>
+                </Grid>
+            </Card>
+
+            {/* Notification Tokens (Admin Only) */}
+            {user.fcmTokens && user.fcmTokens.length > 0 && (
+                <Card shadow="sm" padding="lg" radius="md" withBorder>
+                    <Title order={3} mb="md">
+                        Push Notification Tokens
+                    </Title>
+                    <Stack gap="xs">
+                        {user.fcmTokens.map((token, index) => (
+                            <div key={index} className="bg-gray-50 rounded-lg p-2">
+                                <Group gap="xs">
+                                    <Text size="xs" className="font-mono flex-1 truncate">
+                                        {token}
+                                    </Text>
+                                    <Tooltip label="Copy token">
+                                        <button
+                                            onClick={() => handleCopy(token, "Token")}
+                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                        >
+                                            <MdContentCopy className="text-gray-500" size={14} />
+                                        </button>
+                                    </Tooltip>
+                                </Group>
+                            </div>
+                        ))}
+                    </Stack>
+                </Card>
+            )}
+        </Stack>
     );
 }
 

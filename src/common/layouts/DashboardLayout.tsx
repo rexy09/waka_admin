@@ -33,7 +33,7 @@ export default function DashboardLayout() {
       navbar={{ width: 250, breakpoint: "md", collapsed: { mobile: !opened } }}
       padding="0"
       style={{
-        backgroundColor: "#ffffff",
+        backgroundColor: "#F9F9F9",
       }}
     >
       <AppShell.Navbar p="0px" withBorder={false}>

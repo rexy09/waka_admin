@@ -24,7 +24,7 @@ export default function Jobs() {
       observer.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && hasMore && !isLoading) {
-            console.log("Fetching more jobs...");
+            // console.log("Fetching more jobs...");
             fetchJobs();
           }
         },
@@ -43,7 +43,7 @@ export default function Jobs() {
         setJobs((prev) => {
           const existingIds = new Set(prev.map((job) => job.id));
           const newJobs = response.data.filter((job) => !existingIds.has(job.id));
-          console.log("New jobs:", newJobs.map((j) => ({ id: j.id, })));
+          // console.log("New jobs:", newJobs.map((j) => ({ id: j.id, })));
           return [...prev, ...newJobs];
         });
         setLastDoc(response.lastDoc ?? null);
