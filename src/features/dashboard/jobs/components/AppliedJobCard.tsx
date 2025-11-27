@@ -6,21 +6,13 @@ import {
   NumberFormatter,
   Space,
   Text,
-  UnstyledButton,
 } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import moment from "moment";
-import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import useIsAuthenticated from "react-auth-kit/hooks/useIsAuthenticated";
-import { FiBookmark } from "react-icons/fi";
 import { IoTimeOutline } from "react-icons/io5";
 import { TbUser, TbUsers } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
 import { Icons } from "../../../../common/icons";
-import { IUser } from "../../../auth/types";
 import { IJobApplication, IJobPost } from "../types";
-import { useJobServices } from "../services";
 import { getCategoryText } from "../utils";
 interface Props {
   job: IJobPost;
@@ -28,92 +20,9 @@ interface Props {
 }
 export default function AppliedJobCard({ job, application }: Props) {
   const navigate = useNavigate();
-  const isAuthenticated = useIsAuthenticated();
-  const authUser = useAuthUser<IUser>();
-  const { isJobSaved, saveJob, unsaveJob } = useJobServices();
-
-  const [isSaved, setIsSaved] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(false);
-
-  // Check if job is saved when component mounts
-  useEffect(() => {
-    const checkSavedStatus = async () => {
-      if (!isAuthenticated || !authUser?.uid) {
-        console.log("User not authenticated, skipping save status check");
-        return;
-      }
-
-      // console.log('Checking save status for job:', job.id);
-      setCheckingStatus(true);
-      try {
-        const saved = await isJobSaved(job.id);
-        // console.log('Job save status:', saved);
-        setIsSaved(saved);
-      } catch (error) {
-        console.error("Error checking saved status:", error);
-      } finally {
-        setCheckingStatus(false);
-      }
-    };
-
-    checkSavedStatus();
-  }, [job.id, isAuthenticated, authUser?.uid]); // Removed isJobSaved from dependencies
-
-  const handleSaveToggle = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent card click navigation
-
-    console.log(
-      "Save toggle clicked for job:",
-      job.id,
-      "Current saved status:",
-      isSaved
-    );
-
-
-
-    if (isLoading || checkingStatus) {
-      console.log("Already loading, skipping...");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      if (isSaved) {
-        console.log("Unsaving job:", job.id);
-        await unsaveJob(job.id);
-        setIsSaved(false);
-        notifications.show({
-          color: "green",
-          title: "Success",
-          message: "Job removed from saved jobs",
-        });
-      } else {
-        console.log("Saving job:", job.id);
-        await saveJob(job.id);
-        setIsSaved(true);
-        notifications.show({
-          color: "green",
-          title: "Success",
-          message: "Job saved successfully",
-        });
-      }
-    } catch (error: any) {
-      console.error("Error toggling save status:", error);
-      notifications.show({
-        color: "red",
-        title: "Error",
-        message: error.message || "Failed to update saved status",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <>
-
       <div className="group relative mx-auto w-[100%] overflow-hidden rounded-[13px] bg-white-300 p-[1px] transition-all duration-300 ease-in-out hover:bg-gradient-to-r hover:from-[#151F42] hover:via-[#170645] hover:to-[#044299]">
         <div className="group-hover:animate-spin-slow invisible absolute -top-40 -bottom-40 left-10 right-10 bg-gradient-to-r from-transparent via-white/90 to-transparent group-hover:visible"></div>
 
@@ -122,7 +31,7 @@ export default function AppliedJobCard({ job, application }: Props) {
             p={"md"}
             radius={"12px"}
             onClick={() => {
-              navigate("/my_jobs/" + job.id + "/applied");
+              navigate("/jobs/" + job.id);
             }}
           >
             <Group wrap="nowrap" align="start">
@@ -138,28 +47,6 @@ export default function AppliedJobCard({ job, application }: Props) {
                   <Text size="md" fw={400} c="#000000" lineClamp={1}>
                     {job.fullName}
                   </Text>
-                  <div onClick={handleSaveToggle} style={{ cursor: "pointer" }}>
-                    <UnstyledButton
-                      variant="subtle"
-                      color={isSaved ? "#151F42" : "#C7C7C7"}
-                      size={"md"}
-                      disabled={checkingStatus || isLoading}
-                      style={{
-                        opacity: checkingStatus || isLoading ? 0.5 : 1,
-                        cursor:
-                          isLoading || checkingStatus
-                            ? "not-allowed"
-                            : "pointer",
-                        pointerEvents: "none", // Prevent button from handling click
-                      }}
-                    >
-                      <FiBookmark
-                        size={16}
-                        fill={isSaved ? "#151F42" : "none"}
-                        color={isSaved ? "#151F42" : "#C7C7C7"}
-                      />
-                    </UnstyledButton>
-                  </div>
                 </Group>
                 <Text
                   size="16px"
@@ -256,20 +143,22 @@ export default function AppliedJobCard({ job, application }: Props) {
                   application.status === "accepted"
                     ? "#044299"
                     : application.status === "approved"
-                      ? "#6247BA"
-                      : application.status === "completed"
-                        ? "#43A047"
-                        : application.status === "pending"
-                          ? "#FF8810"
-                          : application.status === "rejected"
-                            ? "#E53935"
-                            : "#044299"
+                    ? "#6247BA"
+                    : application.status === "completed"
+                    ? "#43A047"
+                    : application.status === "pending"
+                    ? "#FF8810"
+                    : application.status === "rejected"
+                    ? "#E53935"
+                    : "#044299"
                 }
                 radius="sm"
                 size="md"
               >
                 <Text size="xs" fw={500} c="#FFFFFF" tt={"capitalize"}>
-                  {application.status === "rejected" ? "Closed" : application.status}
+                  {application.status === "rejected"
+                    ? "Closed"
+                    : application.status}
                 </Text>
               </Badge>
             </Group>

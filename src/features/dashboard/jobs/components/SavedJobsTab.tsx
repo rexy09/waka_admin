@@ -6,24 +6,22 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import { IUser } from "../../../auth/types";
+import { useParams } from "react-router-dom";
 import { useJobServices } from "../services";
 import { IJobPost } from "../types";
 import JobCard from "./JobCard";
 import { JobCardSkeleton } from "./Loaders";
 
 export default function SavedJobsTab() {
-  const authUser = useAuthUser<IUser>();
   const { getSavedJobs } = useJobServices();
   const [isLoading, setIsLoading] = useState(false);
   const [jobs, setJobs] = useState<IJobPost[]>([]);
   const [lastDoc, setLastDoc] = useState<any | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const {id:uid} = useParams<{ id: string }>();
 
   const observer = useRef<IntersectionObserver | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-
   // Set up Intersection Observer (following NotificationSection pattern)
   const lastJobRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -48,7 +46,7 @@ export default function SavedJobsTab() {
 
 
   const fetchJobs = () => {
-    if (!authUser?.uid) {
+    if (!uid) {
       console.log("User not authenticated, cannot fetch saved jobs");
       setIsLoading(false);
       setHasMore(false);
@@ -60,7 +58,7 @@ export default function SavedJobsTab() {
     setIsLoading(true);
     // On initial load, lastDoc is null, so fetch first page
     // On next page, pass direction 'next' and lastDoc
-    getSavedJobs(authUser.uid, lastDoc ? "next" : undefined, lastDoc ?? undefined)
+    getSavedJobs(uid, lastDoc ? "next" : undefined, lastDoc ?? undefined)
       .then((response) => {
         setIsLoading(false);
         setJobs((prev) => {
@@ -83,10 +81,8 @@ export default function SavedJobsTab() {
       });
   };
   useEffect(() => {
-    if (authUser?.uid) {
-      fetchData();
-    }
-  }, [authUser?.uid]);
+    fetchData();
+  }, []);
 
   
 

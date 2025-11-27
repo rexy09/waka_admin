@@ -6,19 +6,19 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useParams } from "react-router-dom";
 import { useUtilities } from "../../../hooks/utils";
 import { useJobServices } from "../services";
 import { useJobParameters } from "../stores";
 import { IJobPost } from "../types";
-import { IUser } from "../../../auth/types";
 import { JobCardSkeleton } from "./Loaders";
 import PostedJobCard from "./PostedJobCard";
 
 export default function PostedJobsTab() {
   const parameters = useJobParameters();
   const { getPostedJobs } = useJobServices();
-  const authUser = useAuthUser<IUser>();
+    const {id:uid} = useParams<{ id: string }>();
+  
   const { getFormattedDate } = useUtilities();
   const [isLoading, setIsLoading] = useState(false);
   const [jobs, setJobs] = useState<IJobPost[]>([]);
@@ -69,11 +69,11 @@ export default function PostedJobsTab() {
   );
 
   const fetchJobs = async () => {
-    if (isLoading || !authUser?.uid || !hasMore) return;
+    if (isLoading || !uid || !hasMore) return;
     setIsLoading(true);
     try {
       // getPostedJobs should accept pagination params: userId, direction, startAfterDoc
-      const response = await getPostedJobs(authUser.uid, "next", lastDoc);
+      const response = await getPostedJobs(uid, "next", lastDoc);
       const newJobs = response.data || response;
       setJobs((prev) => {
         const existingIds = new Set(prev.map((job) => job.id));
@@ -101,7 +101,7 @@ export default function PostedJobsTab() {
     setHasMore(true);
     fetchJobs();
     // eslint-disable-next-line
-  }, [authUser?.uid]);
+  }, [uid]);
 
   const skeletons = Array.from({ length: 6 }, (_, index) => (
     <JobCardSkeleton key={index} />

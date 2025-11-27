@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 import AuthLayout from "../common/layouts/AuthLayout";
 import LoginPage from "../pages/auth/LoginPage";
-import AppliedJobDetailsPage from "../pages/dashboard/AppliedJobDetailsPage";
 import CompleteProfilePage from "../pages/dashboard/CompleteProfilePage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import JobsPage from "../pages/dashboard/JobsPage";
@@ -43,7 +42,6 @@ export const router = createBrowserRouter(
         <Route index path="/complete_profile" element={<CompleteProfilePage />} />
         <Route index path="/post_job" element={<PostJobPage />} />
         <Route index path="/my_jobs" element={<MyJobsPage />} />
-        <Route index path="/my_jobs/:id/applied" element={<AppliedJobDetailsPage />} />
         <Route index path="/my_jobs/:id/posted" element={<PostedJobDetailsPage />} />
         <Route index path="/profile" element={<ProfilePage />} />
         <Route index path="/users" element={<UsersPage />} />

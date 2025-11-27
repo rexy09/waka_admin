@@ -1,6 +1,5 @@
 import {
   Group,
-  Space,
   Tabs,
   Text
 } from "@mantine/core";
@@ -37,33 +36,12 @@ export default function MyJobs() {
 
   return (
     <div>
-      <Space h="xs" />
-      <Text fw={600} fz={40}>
-        My Jobs
-      </Text>
-      <Text fw={400} fz={21} c={"#7F7D7D"}>
-        {activeTab == "applied" && "Here are the jobs you’ve applied for- good luck!"}
-        {activeTab == "saved" && "Your saved opportunities — ready when you are"}
-        {activeTab == "posted" && "Keep an eye on your active job posts here."}
+      
+      <Group justify="space-between" align="center">
+        <Text fw={600} fz={"30px"}>
+          User Jobs
+        </Text>
         
-      </Text>
-      <Space h="md" />
-      <Group justify="end">
-        {/* <div className="flex bg-[#F4F4F4C9] rounded-lg p-1 w-fit gap-2 border border-[#C7C7C72B]">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeTab === tab.id
-                  ? "bg-[#151F42] text-white shadow-sm"
-                  : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div> */}
         <div className="flex bg-[#F4F4F4C9] rounded-lg p-1 w-fit gap-2 border border-[#C7C7C72B] relative overflow-hidden">
           {tabs.map((tab) => (
             <button

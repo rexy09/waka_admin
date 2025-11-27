@@ -146,3 +146,97 @@ export const migrateJobPostsDatePosted = async () => {
   console.log("Migration complete!");
   console.log(`Updated: ${updated}, Skipped: ${skipped}`);
 };
+
+export const migrateSavedJobsDates = async () => {
+  console.log("Migrating savedJobs dateAdded & dateUpdated → Firestore Timestamp...");
+
+  const savedJobsRef = collection(db, "savedJobs");
+  const snapshot = await getDocs(
+    query(savedJobsRef)
+  );
+
+  let batch = writeBatch(db);
+  let ops = 0;
+  let updated = 0;
+  let skipped = 0;
+
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    const dateAdded = data.dateAdded;
+    const dateUpdated = data.dateUpdated;
+
+    // Check if both are already Timestamps
+    const dateAddedIsTimestamp = dateAdded instanceof Timestamp;
+    const dateUpdatedIsTimestamp = dateUpdated instanceof Timestamp;
+
+    if (dateAddedIsTimestamp && dateUpdatedIsTimestamp) {
+      skipped++;
+      continue;
+    }
+
+    const updates: any = {};
+    let needsUpdate = false;
+
+    // Handle dateAdded
+    if (dateAdded && !dateAddedIsTimestamp) {
+      let parsed: Date | null = null;
+
+      if (typeof dateAdded === "string") {
+        parsed = new Date(dateAdded);
+      } else if (dateAdded instanceof Date) {
+        parsed = dateAdded;
+      }
+
+      if (parsed && !isNaN(parsed.getTime())) {
+        updates.dateAdded = Timestamp.fromDate(parsed);
+        needsUpdate = true;
+      } else {
+        console.warn(`Invalid dateAdded in doc ${doc.id}:`, dateAdded);
+      }
+    }
+
+    // Handle dateUpdated
+    if (dateUpdated && !dateUpdatedIsTimestamp) {
+      let parsed: Date | null = null;
+
+      if (typeof dateUpdated === "string") {
+        parsed = new Date(dateUpdated);
+      } else if (dateUpdated instanceof Date) {
+        parsed = dateUpdated;
+      }
+
+      if (parsed && !isNaN(parsed.getTime())) {
+        updates.dateUpdated = Timestamp.fromDate(parsed);
+        needsUpdate = true;
+      } else {
+        console.warn(`Invalid dateUpdated in doc ${doc.id}:`, dateUpdated);
+      }
+    }
+
+    if (needsUpdate) {
+      batch.update(doc.ref, updates);
+      updated++;
+      ops++;
+
+      // Firestore batch limit = 500 writes
+      if (ops === 499) {
+        console.log(`Committing batch. Updated so far: ${updated}`);
+        await batch.commit();
+        batch = writeBatch(db);
+        ops = 0;
+      }
+    } else {
+      skipped++;
+    }
+  }
+
+  // Commit remaining
+  if (ops > 0) {
+    console.log(`Committing final batch of ${ops} updates...`);
+    await batch.commit();
+  }
+
+  console.log("Migration complete!");
+  console.log(`Updated: ${updated} documents`);
+  console.log(`Skipped: ${skipped} documents (already correct or invalid)`);
+};

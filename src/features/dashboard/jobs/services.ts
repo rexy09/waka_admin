@@ -305,7 +305,6 @@ export const useJobServices = () => {
     if (!authUser?.uid) {
       throw new Error("User is not authenticated");
     }
-    console.log("Posting job for user:", authUser.dateAdded);
 
     const dataCollection = jobPostsRef;
     const uuid = uuidv4();
@@ -376,7 +375,7 @@ export const useJobServices = () => {
 
   const getSavedJobs = async (
     userId: string,
-    direction: "next" | "prev" | string | undefined,
+    direction: "next" | "prev" | string | undefined = "next",
     startAfterDoc?: DocumentSnapshot,
     endBeforeDoc?: DocumentSnapshot
   ) => {
@@ -385,47 +384,36 @@ export const useJobServices = () => {
       throw new Error("User ID is required");
     }
 
-    const savedJobsCollection = savedJobsRef;
-
-    // Get total count
-
-    const totalQueryConstraints = [
+    // Build query with pagination
+    let savedJobsQuery = query(
+      savedJobsRef,
       where("userId", "==", userId),
-      where("isProduction", "==", Env.isProduction),
-    ];
-    const totalQuerySnapshot = query(
-      savedJobsCollection,
-      ...totalQueryConstraints
-    );
-    const count = await getCountFromServer(totalQuerySnapshot);
-
-    // Build query for paginated data
-    const dataQueryConstraints = [
+      // where("isProduction", "==", Env.isProduction),
       orderBy("dateAdded", "desc"),
-      where("userId", "==", userId),
-      where("isProduction", "==", Env.isProduction),
-    ];
-
-    let dataQuery = query(
-      savedJobsCollection,
-      ...dataQueryConstraints,
       limit(pageLimit)
     );
 
     if (direction === "next" && startAfterDoc) {
-      dataQuery = query(dataQuery, startAfter(startAfterDoc));
-    } else if (direction === "prev" && endBeforeDoc) {
-      dataQuery = query(
-        savedJobsCollection,
-        orderBy("dateAdded", "desc"),
+      savedJobsQuery = query(
+        savedJobsRef,
         where("userId", "==", userId),
-        where("isProduction", "==", Env.isProduction),
+        // where("isProduction", "==", Env.isProduction),
+        orderBy("dateAdded", "desc"),
+        startAfter(startAfterDoc),
+        limit(pageLimit)
+      );
+    } else if (direction === "prev" && endBeforeDoc) {
+      savedJobsQuery = query(
+        savedJobsRef,
+        where("userId", "==", userId),
+        // where("isProduction", "==", Env.isProduction),
+        orderBy("dateAdded", "desc"),
         endBefore(endBeforeDoc),
         limitToLast(pageLimit)
       );
     }
 
-    const querySnapshot = await getDocs(dataQuery);
+    const querySnapshot = await getDocs(savedJobsQuery);
 
     // Extract job details directly from saved jobs documents
     const jobsWithDetails: IJobPost[] = querySnapshot.docs.map((doc) => {
@@ -434,7 +422,6 @@ export const useJobServices = () => {
     });
 
     return {
-      count: count.data().count,
       data: jobsWithDetails,
       lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1],
       firstDoc: querySnapshot.docs[0],
@@ -964,6 +951,84 @@ export const useJobServices = () => {
     return true;
   };
 
+  // Count functions for user statistics
+  const getUserAppliedJobsCount = async (userId: string): Promise<number> => {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+
+    const applicationsQuery = query(
+      collectionGroup(db, "applications"),
+      where("uid", "==", userId),
+      where("isProduction", "==", Env.isProduction)
+    );
+
+    const snapshot = await getCountFromServer(applicationsQuery);
+    const count = snapshot.data().count;
+    return count;
+  };
+
+  const getUserSavedJobsCount = async (userId: string): Promise<number> => {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+
+    const savedJobsQuery = query(
+      savedJobsRef,
+      where("userId", "==", userId),
+      // where("isProduction", "==", Env.isProduction)
+    );
+
+    const snapshot = await getCountFromServer(savedJobsQuery);
+    const count = snapshot.data().count;
+    return count;
+  };
+
+  const getUserHiredJobsCount = async (userId: string): Promise<number> => {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+
+    try {
+      // Use collectionGroup to query all "applicants" subcollections across all hired jobs
+      // This is 100-1000x faster than the previous N+1 query approach
+      // Note: isProduction filter removed to avoid requiring composite index
+      const applicantsQuery = query(
+        collectionGroup(db, "applicants"),
+        where("applicantUid", "==", userId)
+      );
+
+
+      // First try to get actual documents to debug
+
+      const snapshot = await getCountFromServer(applicantsQuery);
+      const count = snapshot.data().count;
+      return count;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getUserPostedJobsCount = async (userId: string): Promise<number> => {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+
+    const postedJobsQuery = query(
+      jobPostsRef,
+      where("postedByUserId", "==", userId),
+      where("isProduction", "==", Env.isProduction)
+    );
+
+    const snapshot = await getCountFromServer(postedJobsQuery);
+    const count = snapshot.data().count;
+    return count;
+  };
+
   return {
     getJobs,
     getJob,
@@ -991,6 +1056,10 @@ export const useJobServices = () => {
     getUserJobPostCount,
     getWorkLocations,
     getHiredJobs,
+    getUserAppliedJobsCount,
+    getUserSavedJobsCount,
+    getUserHiredJobsCount,
+    getUserPostedJobsCount,
   };
 };
 
