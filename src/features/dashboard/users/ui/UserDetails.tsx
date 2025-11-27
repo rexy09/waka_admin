@@ -38,6 +38,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { IUser } from "../../../auth/types";
 import { useUserServices } from "../services";
 import { IoArrowBack } from "react-icons/io5";
+import SendNotificationModal from "../components/SendNotificationModal";
 
 function UserDetails() {
     const { id } = useParams<{ id: string }>();
@@ -201,6 +202,11 @@ function UserDetails() {
                         User Details
                     </Text>
                 </Group>
+                <SendNotificationModal
+                    userId={user.uid}
+                    userName={user.fullName}
+                    countryCode={user.country?.code}
+                />
             </Group>
             <Divider />
 
