@@ -27,10 +27,13 @@ import {
 import { INotificationForm } from "../types";
 import { useNotificationServices } from "../services";
 import logo from "../../../../assets/logo.png";
+import { TUTORIALS, Language } from "../constants";
 
 export default function NotificationCenter() {
   const { broadcastNotification } = useNotificationServices();
   const [loading, setLoading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
 
   const form = useForm<INotificationForm>({
     initialValues: {
@@ -54,6 +57,50 @@ export default function NotificationCenter() {
     { value: "RW", label: "Rwanda" },
     { value: "BI", label: "Burundi" },
   ];
+
+  const languageOptions = [
+    { value: "en", label: "English" },
+    { value: "sw", label: "Swahili" },
+  ];
+
+  const templateOptions = [
+    { value: "", label: "Select a template (optional)" },
+    ...TUTORIALS.map((tutorial) => ({
+      value: tutorial.id.toString(),
+      label: tutorial.en.title,
+    })),
+  ];
+
+  const handleTemplateChange = (value: string | null) => {
+    setSelectedTemplate(value);
+
+    if (value) {
+      const tutorial = TUTORIALS.find((t) => t.id.toString() === value);
+      if (tutorial) {
+        const content = tutorial[selectedLanguage];
+        form.setValues({
+          title: content.title,
+          body: content.description,
+        });
+      }
+    }
+  };
+
+  const handleLanguageChange = (value: string | null) => {
+    const newLanguage = (value as Language) || "en";
+    setSelectedLanguage(newLanguage);
+
+    if (selectedTemplate) {
+      const tutorial = TUTORIALS.find((t) => t.id.toString() === selectedTemplate);
+      if (tutorial) {
+        const content = tutorial[newLanguage];
+        form.setValues({
+          title: content.title,
+          body: content.description,
+        });
+      }
+    }
+  };
 
   const handleSubmit = async (values: INotificationForm) => {
     setLoading(true);
@@ -116,6 +163,28 @@ export default function NotificationCenter() {
                 </div>
 
                 <Divider />
+
+                {/* Template Selection */}
+                <Group grow>
+                  <Select
+                    label="Template"
+                    placeholder="Choose a tutorial template"
+                    data={templateOptions}
+                    value={selectedTemplate}
+                    onChange={handleTemplateChange}
+                    clearable
+                    searchable
+                  />
+                  <Select
+                    label="Language"
+                    placeholder="Select language"
+                    data={languageOptions}
+                    value={selectedLanguage}
+                    onChange={handleLanguageChange}
+                  />
+                </Group>
+
+                <Divider variant="dashed" />
 
                 {/* Form Fields */}
                 <TextInput
