@@ -19,6 +19,7 @@ import { IUser } from "../../../auth/types";
 import { useJobServices } from "../services";
 import { IJobPost } from "../types";
 import { getCategoryText } from "../utils";
+import { MdCalendarToday } from "react-icons/md";
 interface Props {
   job: IJobPost;
 }
@@ -159,6 +160,15 @@ export default function JobCard({ job }: Props) {
                         ? new Date(job.datePosted)
                         : job.datePosted.toDate()
                     ).fromNow()}
+                  </Text>
+                  <Space w="xs" />
+                    <MdCalendarToday size={10} />
+                   <Text size="10px" fw={500} c="#596258">
+                    {moment(
+                      typeof job.datePosted === "string"
+                        ? new Date(job.datePosted)
+                        : job.datePosted.toDate()
+                    ).format("DD MMM YYYY")}
                   </Text>
                 </Group>
                 <Space h="xs" />

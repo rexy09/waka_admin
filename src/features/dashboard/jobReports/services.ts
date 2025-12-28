@@ -10,6 +10,7 @@ import {
   updateDoc,
   Timestamp,
   QueryConstraint,
+  getCountFromServer,
 } from "firebase/firestore";
 import useDbService from "../../services/DbService";
 import {
@@ -43,6 +44,11 @@ export const useJobReportServices = () => {
       // Order by date (most recent first)
       constraints.push(orderBy("dateAdded", "desc"));
 
+      // Get total count
+      const totalQuery = query(jobReportsRef, ...constraints);
+      const totalSnapshot = await getCountFromServer(totalQuery);
+      const totalCount = totalSnapshot.data().count;
+
       // Pagination
       if (lastDocument) {
         constraints.push(startAfter(lastDocument));
@@ -61,10 +67,13 @@ export const useJobReportServices = () => {
       });
 
       const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+      const firstDoc = querySnapshot.docs[0];
 
       return {
         data: reports,
         lastDoc: lastDoc,
+        firstDoc: firstDoc,
+        totalCount: totalCount,
         hasMore: querySnapshot.docs.length === limitCount,
       };
     } catch (error) {

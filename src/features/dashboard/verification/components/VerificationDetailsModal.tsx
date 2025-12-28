@@ -352,10 +352,10 @@ export default function VerificationDetailsModal({
           label="New Status"
           data={[
             { value: "pending", label: "Pending" },
-            { value: "under_review", label: "Under Review" },
+            // { value: "under_review", label: "Under Review" },
             { value: "approved", label: "Approved" },
             { value: "rejected", label: "Rejected" },
-            { value: "needs_info", label: "Needs Additional Info" },
+            // { value: "needs_info", label: "Needs Additional Info" },
           ]}
           value={newStatus}
           onChange={(value) => setNewStatus(value as VerificationStatus)}
@@ -370,13 +370,13 @@ export default function VerificationDetailsModal({
           </Paper>
         )}
 
-        <Textarea
+       {newStatus !== "rejected" &&  <Textarea
           label="Review Notes"
           placeholder="Add your review notes here..."
           value={reviewNotes}
           onChange={(e) => setReviewNotes(e.currentTarget.value)}
           minRows={3}
-        />
+        />}
 
         {newStatus === "rejected" && (
           <Textarea

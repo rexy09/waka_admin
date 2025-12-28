@@ -18,7 +18,13 @@ interface VerificationTableProps {
   isLoading?: boolean;
   totalData?: number;
   showPagination?: boolean;
-  fetchData?: (offset: number) => void;
+  onNextPage?: () => void;
+  onPreviousPage?: () => void;
+  onPageSizeChange?: (size: number) => void;
+  currentPageSize?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  currentRange?: { start: number; end: number };
 }
 
 type ProfileVerificationStatus = "pending" | "verified" | "rejected" | "failed";
@@ -71,7 +77,13 @@ export default function VerificationTable({
   isLoading = false,
   totalData = 0,
   showPagination = false,
-  fetchData,
+  onNextPage,
+  onPreviousPage,
+  onPageSizeChange,
+  currentPageSize = 20,
+  hasNextPage = false,
+  hasPreviousPage = false,
+  currentRange,
 }: VerificationTableProps) {
   const columns = (
     <Table.Tr>
@@ -154,7 +166,13 @@ export default function VerificationTable({
       isLoading={isLoading}
       totalData={totalData}
       showPagination={showPagination}
-      fetchData={fetchData}
+      onNextPage={onNextPage}
+      onPreviousPage={onPreviousPage}
+      onPageSizeChange={onPageSizeChange}
+      currentPageSize={currentPageSize}
+      hasNextPage={hasNextPage}
+      hasPreviousPage={hasPreviousPage}
+      currentRange={currentRange}
       title="User Verifications"
     />
   );

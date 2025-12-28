@@ -4,13 +4,13 @@ import {
   Center,
   Group,
   Loader,
-  Pagination,
   ScrollArea,
+  Select,
   Table,
   Text,
+  ActionIcon,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
 import { Color } from "../../theme";
 import "./table.css";
 
@@ -24,11 +24,13 @@ interface TableProps {
   totalData: number;
   isLoading: boolean;
   showPagination?: boolean;
-  showPageParam?: boolean;
-  fetchData?: (offset: number) => void;
-  downloadData?: () => void;
-  downloading?: boolean;
-  exporData?: boolean;
+  onNextPage?: () => void;
+  onPreviousPage?: () => void;
+  onPageSizeChange?: (size: number) => void;
+  currentPageSize?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  currentRange?: { start: number; end: number };
 }
 
 export function CustomTable({
@@ -37,25 +39,18 @@ export function CustomTable({
   colSpan,
   isLoading,
   totalData,
-  fetchData,
   showPagination,
-  showPageParam,
   title,
   subtitle,
   summary,
+  onNextPage,
+  onPreviousPage,
+  onPageSizeChange,
+  currentPageSize = 50,
+  hasNextPage = false,
+  hasPreviousPage = false,
+  currentRange = { start: 1, end: 1 },
 }: TableProps) {
-  const totalPages = () => Math.ceil(totalData / 10);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [activePage, setPage] = useState<number>(1);
-  useEffect(() => {
-    if (showPageParam) {
-      if (searchParams.get("page")) {
-        setPage(Number(searchParams.get("page")));
-      } else {
-        setPage(1);
-      }
-    }
-  }, [rows]);
 
   return (
     <Card
@@ -127,35 +122,43 @@ export function CustomTable({
           {/* </div> */}
         </Table.ScrollContainer>
         {showPagination ? (
-          <Group justify="flex-start">
-            <Pagination
-              size="sm"
-              style={() => ({
-                control: {
-                  "&[data-active]": {
-                    backgroundColor: Color.PrimaryBlue,
-                    border: 0,
-                  },
-                },
-              })}
-              value={showPageParam ? activePage : undefined}
-              total={totalPages()}
-              onChange={(value: number) => {
-                if (showPageParam) {
-                  if (value == 1) {   
-                    searchParams.delete("page");
-                  } else {
-                    searchParams.set("page", value.toString());
-                  }
-                  setSearchParams(searchParams);
-                }
-                fetchData ? fetchData(value) : null;
-              }}
-              radius="md"
-            />{" "}
-            <Text fw={500} fz="14px">
-              Total Count: {totalData}
-            </Text>
+          <Group justify="space-between" p="md" style={{ borderTop: `1px solid ${Color.Border}` }}>
+            <Group gap="md">
+              <Group gap="xs">
+                <Text size="sm" c="dimmed">Rows per page:</Text>
+                <Select
+                  size="xs"
+                  w={70}
+                  data={["20","50", "100", "250"]}
+                  value={currentPageSize.toString()}
+                  onChange={(value) => onPageSizeChange?.(Number(value))}
+                  allowDeselect={false}
+                />
+              </Group>
+              <Text size="sm" c="dimmed">
+                {currentRange.start} - {currentRange.end} of {totalData}
+              </Text>
+            </Group>
+            <Group gap="xs">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={onPreviousPage}
+                disabled={!hasPreviousPage}
+                size="md"
+              >
+                <MdNavigateBefore size={20} />
+              </ActionIcon>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={onNextPage}
+                disabled={!hasNextPage}
+                size="md"
+              >
+                <MdNavigateNext size={20} />
+              </ActionIcon>
+            </Group>
           </Group>
         ) : null}
       </ScrollArea>

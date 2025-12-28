@@ -47,7 +47,7 @@ export default function UserFilters({ onFiltersChange, filterOptions, isLoading 
         />
       </Grid.Col>
 
-      <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
+      {/* <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
         <Select
           placeholder="Role"
           data={filterOptions.roles.map(role => ({ value: role, label: role.charAt(0).toUpperCase() + role.slice(1) }))}
@@ -57,7 +57,7 @@ export default function UserFilters({ onFiltersChange, filterOptions, isLoading 
           disabled={isLoading}
           size="sm"
         />
-      </Grid.Col>
+      </Grid.Col> */}
 
       <Grid.Col span={{ base: 12, sm: 6, md: 2 }}>
         <Select

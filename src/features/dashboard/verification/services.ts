@@ -10,6 +10,7 @@ import {
   updateDoc,
   Timestamp,
   QueryConstraint,
+  getCountFromServer,
 } from "firebase/firestore";
 import useDbService from "../../services/DbService";
 import {
@@ -63,10 +64,18 @@ export const useUserVerificationServices = () => {
       });
 
       const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+      const firstDoc = querySnapshot.docs[0];
+
+      // Get total count
+      const totalQuery = query(userVerificationRef, ...constraints.slice(0, constraints.length - 2)); // Remove startAfter and limit
+      const totalSnapshot = await getCountFromServer(totalQuery);
+      const totalCount = totalSnapshot.data().count;
 
       return {
         data: verifications,
         lastDoc: lastDoc,
+        firstDoc: firstDoc,
+        totalCount: totalCount,
         hasMore: querySnapshot.docs.length === limitCount,
       };
     } catch (error) {
@@ -124,6 +133,17 @@ export const useUserVerificationServices = () => {
         updatedAt: Timestamp.now(),
       };
 
+      // If approved, set verificationStatus to "verified" and update verificationDate
+      if (updateData.status === "approved") {
+        updatePayload.verificationStatus = "verified";
+        updatePayload.verificationDate = Timestamp.now();
+      }
+
+      // If rejected, set verificationStatus to "rejected"
+      if (updateData.status === "rejected") {
+        updatePayload.verificationStatus = "rejected";
+      }
+
       if (updateData.rejectionReason) {
         updatePayload.rejectionReason = updateData.rejectionReason;
       }
@@ -135,7 +155,7 @@ export const useUserVerificationServices = () => {
 
       await updateDoc(verificationRef, updatePayload);
 
-      // If approved, update user's isVerified status
+      // If approved, update user's isVerified status and send notification
       if (
         updateData.status === "approved" &&
         updateData.updateUserVerificationStatus
@@ -147,6 +167,74 @@ export const useUserVerificationServices = () => {
             isVerified: true,
             updatedAt: Timestamp.now(),
           });
+
+          // Send notification to user
+          try {
+            const axios = (await import("axios")).default;
+            const Env = (await import("../../../config/env")).default;
+
+            await axios.post(
+              Env.baseURL + "/notifications/job_notifications",
+              {
+                user_id: verification.uid,
+                country_code: verification.country || "",
+                title: "Account Verified ✅",
+                body: "Congratulations! Your account has been verified. You now have access to all verified features.",
+                data: {
+                  type: "account_verification",
+                  verificationId: verificationId,
+                  timestamp: new Date().toISOString(),
+                },
+              }
+            );
+            console.log("Verification notification sent successfully");
+          } catch (notificationError) {
+            console.error("Error sending verification notification:", notificationError);
+            // Don't throw error - verification was successful even if notification fails
+          }
+        }
+      }
+
+      // If rejected, send notification to user
+      if (updateData.status === "rejected") {
+        const verification = await getVerificationById(verificationId);
+        if (verification.uid) {
+          // Update user's isVerified to false
+          const userRef = doc(usersRef, verification.uid);
+          await updateDoc(userRef, {
+            isVerified: false,
+            updatedAt: Timestamp.now(),
+          });
+
+          // Send rejection notification
+          try {
+            const axios = (await import("axios")).default;
+            const Env = (await import("../../../config/env")).default;
+
+            const rejectionMessage = updateData.rejectionReason
+              ? `Verification not approved. ${updateData.rejectionReason}. Please resubmit.`.substring(0, 160)
+              : "Verification not approved. Please review your documents and resubmit.";
+
+            await axios.post(
+              Env.baseURL + "/notifications/job_notifications",
+              {
+                user_id: verification.uid,
+                country_code: verification.country || "",
+                title: "Verification Update",
+                body: rejectionMessage,
+                data: {
+                  type: "account_verification_rejected",
+                  verificationId: verificationId,
+                  rejectionReason: updateData.rejectionReason || "",
+                  timestamp: new Date().toISOString(),
+                },
+              }
+            );
+            console.log("Rejection notification sent successfully");
+          } catch (notificationError) {
+            console.error("Error sending rejection notification:", notificationError);
+            // Don't throw error - rejection was successful even if notification fails
+          }
         }
       }
 

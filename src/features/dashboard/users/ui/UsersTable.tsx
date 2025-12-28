@@ -2,11 +2,11 @@ import {
   Avatar,
   Group,
   Table,
-  Text
+  Text,
+  UnstyledButton
 } from "@mantine/core";
 import { DocumentSnapshot } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
-import { MdRemoveRedEye } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { CustomTable } from "../../../../common/components/Table/CustomTable";
 import { IUser } from "../../../auth/types";
@@ -22,7 +22,17 @@ export default function UsersTable() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalUsers, setTotalUsers] = useState(0);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | undefined>();
-  const [_firstDoc, setFirstDoc] = useState<DocumentSnapshot | undefined>();
+  const [firstDoc, setFirstDoc] = useState<DocumentSnapshot | undefined>();
+  const [pageSize, setPageSize] = useState(20);
+
+  // Store complete page information for reliable backward navigation
+  type PageInfo = {
+    firstDoc: DocumentSnapshot;
+    lastDoc: DocumentSnapshot;
+    startPosition: number;
+  };
+  const [pageStack, setPageStack] = useState<PageInfo[]>([]);
+  const [currentPageStart, setCurrentPageStart] = useState(1);
   const [filters, setFilters] = useState<UserFilterParameters>({
     isProduction: "both",
     isVerified: "both",
@@ -48,7 +58,7 @@ export default function UsersTable() {
           direction,
           startAfterDoc,
           endBeforeDoc,
-          10
+          pageSize
         );
         setUsers(result.data);
         setTotalUsers(result.totalCount);
@@ -62,20 +72,88 @@ export default function UsersTable() {
         setIsLoading(false);
       }
     },
-    [filters]
+    [filters, pageSize, getUsers]
   );
 
-  const handlePagination = useCallback(
-    (page: number) => {
-      // For Firebase cursor-based pagination, we need to track direction
-      // This is a simplified approach - in a real app you'd want more sophisticated pagination tracking
-      if (page > 1) {
-        fetchUsers("next", lastDoc, undefined, filters);
-      } else {
-        fetchUsers("next", undefined, undefined, filters);
+  const handleNextPage = useCallback(() => {
+    if (lastDoc && firstDoc) {
+      // Save current page info to stack before moving forward
+      setPageStack(prev => [...prev, {
+        firstDoc,
+        lastDoc,
+        startPosition: currentPageStart
+      }]);
+      setCurrentPageStart(prev => prev + users.length);
+      fetchUsers("next", lastDoc, undefined, filters);
+    }
+  }, [lastDoc, firstDoc, users.length, currentPageStart, filters, fetchUsers]);
+
+  const handlePreviousPage = useCallback(async () => {
+    if (pageStack.length > 0) {
+      // Pop the last doc from history
+      const newStack = [...pageStack];
+      const previousPage = newStack.pop();
+      if (!previousPage) return;
+
+      setPageStack(newStack);
+      setCurrentPageStart(previousPage.startPosition);
+
+      try {
+        setIsLoading(true);
+        const result = await getUsers(
+          filters,
+          "next",
+          newStack.length > 0 ? newStack[newStack.length - 1].lastDoc : undefined,
+          undefined,
+          pageSize
+        );
+
+        if (result.data.length > 0) {
+          setUsers(result.data);
+          setTotalUsers(result.totalCount);
+          setLastDoc(result.lastDoc);
+          setFirstDoc(result.firstDoc);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [pageStack, pageSize, filters, getUsers]);
+
+  const handlePageSizeChange = useCallback(
+    async (newSize: number) => {
+      setPageSize(newSize);
+      // Reset pagination when page size changes
+      setLastDoc(undefined);
+      setFirstDoc(undefined);
+      setPageStack([]);
+      setCurrentPageStart(1);
+
+      // Fetch with the new page size directly
+      setIsLoading(true);
+      try {
+        const result = await getUsers(
+          filters,
+          "next",
+          undefined,
+          undefined,
+          newSize
+        );
+        setUsers(result.data);
+        setTotalUsers(result.totalCount);
+        setLastDoc(result.lastDoc);
+        setFirstDoc(result.firstDoc);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        setUsers([]);
+        setTotalUsers(0);
+      } finally {
+        setIsLoading(false);
       }
     },
-    [fetchUsers, lastDoc, filters]
+    [filters, getUsers]
   );
 
   const handleFiltersChange = useCallback(
@@ -84,6 +162,8 @@ export default function UsersTable() {
       // Reset pagination when filters change
       setLastDoc(undefined);
       setFirstDoc(undefined);
+      setPageStack([]);
+      setCurrentPageStart(1);
       fetchUsers("next", undefined, undefined, newFilters);
     },
     [fetchUsers]
@@ -95,7 +175,7 @@ export default function UsersTable() {
     navigate(`/users/${user.uid}`);
   };
 
- 
+
 
   useEffect(() => {
     const initializeData = async () => {
@@ -112,27 +192,20 @@ export default function UsersTable() {
 
   const columns = (
     <Table.Tr>
-      <Table.Th
-        style={{
-          borderTopLeftRadius: 8,
-        }}
-      >
-        User
-      </Table.Th>
+      <Table.Th>User</Table.Th>
       <Table.Th>Email</Table.Th>
-      <Table.Th>Role</Table.Th>
+      {/* <Table.Th>Role</Table.Th> */}
       <Table.Th>User Type</Table.Th>
       <Table.Th>Status</Table.Th>
       <Table.Th>Verified</Table.Th>
       <Table.Th>Environment</Table.Th>
       <Table.Th>Country</Table.Th>
-      <Table.Th>Date Added</Table.Th>
       <Table.Th
         style={{
           borderTopRightRadius: 8,
         }}
       >
-        Action
+        Date Added
       </Table.Th>
     </Table.Tr>
   );
@@ -140,20 +213,22 @@ export default function UsersTable() {
   const rows = users.map((user) => (
     <Table.Tr key={user.id}>
       <Table.Td>
-        <Group gap="sm" wrap="nowrap">
-          <Avatar src={user.avatarURL} size={30} radius="xl">
-            {user.fullName?.charAt(0)?.toUpperCase()}
-          </Avatar>
-          <Text size="sm" fw={500}>
-            {user.fullName}
-          </Text>
-        </Group>
+        <UnstyledButton onClick={() => handleViewUserDetails(user)}>
+          <Group gap="sm" wrap="nowrap">
+            <Avatar src={user.avatarURL} size={30} radius="xl">
+              {user.fullName?.charAt(0)?.toUpperCase()}
+            </Avatar>
+            <Text size="sm" fw={500} lineClamp={1} style={{ maxWidth: "150px" }}>
+              {user.fullName}
+            </Text>
+          </Group>
+        </UnstyledButton>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{user.email}</Text>
+        <Text size="sm" lineClamp={1} style={{ maxWidth: "200px" }}>{user.email}</Text>
       </Table.Td>
-    
-      <Table.Td style={{ minWidth: "80px" }}>
+
+      {/* <Table.Td style={{ minWidth: "80px" }}>
         <div className="min-w-[60px] flex justify-center">
           <CustomBadge
             variant={user.role === "admin" ? "error" : "primary"}
@@ -162,7 +237,7 @@ export default function UsersTable() {
             {user.role}
           </CustomBadge>
         </div>
-      </Table.Td>
+      </Table.Td> */}
       <Table.Td style={{ minWidth: "100px" }}>
         <div className="min-w-[80px] flex justify-center">
           <CustomBadge
@@ -210,7 +285,7 @@ export default function UsersTable() {
         </div>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{user.country?.name || "-"}</Text>
+        <Text size="sm" lineClamp={1} style={{ maxWidth: "120px" }}>{user.country?.name || "-"}</Text>
       </Table.Td>
       <Table.Td>
         <Text size="sm">
@@ -227,17 +302,7 @@ export default function UsersTable() {
             : "-"}
         </Text>
       </Table.Td>
-      <Table.Td>
-        <div className="flex justify-center">
-          <button
-            onClick={() => handleViewUserDetails(user)}
-            className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
-            title="View user details"
-          >
-            <MdRemoveRedEye className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
-          </button>
-        </div>
-      </Table.Td>
+
     </Table.Tr>
   ));
 
@@ -251,16 +316,25 @@ export default function UsersTable() {
       <CustomTable
         columns={columns}
         rows={rows}
-        colSpan={11}
+        colSpan={9}
         totalData={totalUsers}
         isLoading={isLoading}
         title="Users"
         subtitle="Manage platform users"
         showPagination={true}
-        fetchData={handlePagination}
+        onNextPage={handleNextPage}
+        onPreviousPage={handlePreviousPage}
+        onPageSizeChange={handlePageSizeChange}
+        currentPageSize={pageSize}
+        hasNextPage={totalUsers > currentPageStart + users.length - 1}
+        hasPreviousPage={pageStack.length > 0}
+        currentRange={{
+          start: currentPageStart,
+          end: currentPageStart + users.length - 1,
+        }}
       />
 
-      
+
     </>
   );
 }

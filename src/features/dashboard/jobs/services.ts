@@ -711,9 +711,9 @@ export const useJobServices = () => {
   const getHiredJobs = async (
     direction: "next" | "prev" | string | undefined = "next",
     startAfterDoc?: DocumentSnapshot,
-    endBeforeDoc?: DocumentSnapshot
+    endBeforeDoc?: DocumentSnapshot,
+    pageLimit: number = 10
   ) => {
-    const pageLimit: number = 10;
 
 
     // Build query constraints

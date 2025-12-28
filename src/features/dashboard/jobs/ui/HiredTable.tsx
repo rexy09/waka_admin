@@ -15,6 +15,17 @@ export default function HiredTable() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalJobs, setTotalJobs] = useState(0);
   const [lastDoc, setLastDoc] = useState<DocumentSnapshot | undefined>();
+  const [firstDoc, setFirstDoc] = useState<DocumentSnapshot | undefined>();
+  const [pageSize, setPageSize] = useState(20);
+
+  // Store complete page information for reliable backward navigation
+  type PageInfo = {
+    firstDoc: DocumentSnapshot;
+    lastDoc: DocumentSnapshot;
+    startPosition: number;
+  };
+  const [pageStack, setPageStack] = useState<PageInfo[]>([]);
+  const [currentPageStart, setCurrentPageStart] = useState(1);
 
   const fetchHiredJobs = useCallback(
     async (
@@ -27,11 +38,95 @@ export default function HiredTable() {
         const result = await getHiredJobs(
           direction,
           startAfterDoc,
-          endBeforeDoc
+          endBeforeDoc,
+          pageSize
         );
+
+        // Only update state if we got results
+        if (result.data.length > 0) {
+          setHiredJobs(result.data);
+          setTotalJobs(result.count);
+          setLastDoc(result.lastDoc);
+          setFirstDoc(result.firstDoc);
+        } else {
+          // If no results, just show a notification but keep current state
+          console.warn("No data found for this page");
+        }
+      } catch (error) {
+        console.error("Error fetching hired jobs:", error);
+        notifications.show({
+          title: "Error",
+          message: "Failed to fetch hired jobs",
+          color: "red",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [getHiredJobs, pageSize]
+  );
+
+  const handleNextPage = useCallback(() => {
+    if (lastDoc && firstDoc) {
+      // Save current page info to stack before moving forward
+      setPageStack(prev => [...prev, {
+        firstDoc,
+        lastDoc,
+        startPosition: currentPageStart
+      }]);
+      setCurrentPageStart(prev => prev + hiredJobs.length);
+      fetchHiredJobs("next", lastDoc, undefined);
+    }
+  }, [lastDoc, firstDoc, hiredJobs.length, currentPageStart, fetchHiredJobs]);
+
+  const handlePreviousPage = useCallback(async () => {
+    if (pageStack.length > 0) {
+      const newStack = [...pageStack];
+      const previousPage = newStack.pop();
+
+      if (!previousPage) return;
+
+      setPageStack(newStack);
+      setCurrentPageStart(previousPage.startPosition);
+
+      try {
+        setIsLoading(true);
+        const result = await getHiredJobs(
+          "next",
+          newStack.length > 0 ? newStack[newStack.length - 1].lastDoc : undefined,
+          undefined,
+          pageSize
+        );
+
+        if (result.data.length > 0) {
+          setHiredJobs(result.data);
+          setTotalJobs(result.count);
+          setLastDoc(result.lastDoc);
+          setFirstDoc(result.firstDoc);
+        }
+      } catch (error) {
+        console.error("Failed to fetch previous page", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [pageStack, pageSize, getHiredJobs]);
+
+  const handlePageSizeChange = useCallback(
+    async (newSize: number) => {
+      setPageSize(newSize);
+      setLastDoc(undefined);
+      setFirstDoc(undefined);
+      setPageStack([]);
+      setCurrentPageStart(1);
+
+      setIsLoading(true);
+      try {
+        const result = await getHiredJobs("next", undefined, undefined, newSize);
         setHiredJobs(result.data);
         setTotalJobs(result.count);
         setLastDoc(result.lastDoc);
+        setFirstDoc(result.firstDoc);
       } catch (error) {
         console.error("Error fetching hired jobs:", error);
         notifications.show({
@@ -46,17 +141,6 @@ export default function HiredTable() {
       }
     },
     [getHiredJobs]
-  );
-
-  const handlePagination = useCallback(
-    (page: number) => {
-      if (page > 1) {
-        fetchHiredJobs("next", lastDoc, undefined);
-      } else {
-        fetchHiredJobs("next", undefined, undefined);
-      }
-    },
-    [fetchHiredJobs, lastDoc]
   );
 
   const handleViewJobDetails = (job: IHiredJob) => {
@@ -108,7 +192,7 @@ export default function HiredTable() {
           {job.applicantsCount !== 1 ? "s" : ""}
         </Badge>
       </Table.Td>
-      
+
       <Table.Td>
         <Badge
           variant="light"
@@ -177,7 +261,16 @@ export default function HiredTable() {
         title="Hired Jobs"
         subtitle="Manage jobs with hired applicants"
         showPagination={true}
-        fetchData={handlePagination}
+        onNextPage={handleNextPage}
+        onPreviousPage={handlePreviousPage}
+        onPageSizeChange={handlePageSizeChange}
+        currentPageSize={pageSize}
+        hasNextPage={totalJobs > currentPageStart + hiredJobs.length - 1}
+        hasPreviousPage={pageStack.length > 0}
+        currentRange={{
+          start: currentPageStart,
+          end: currentPageStart + hiredJobs.length - 1,
+        }}
       />
     </>
   );
