@@ -6,6 +6,12 @@ export interface UserStatistics {
   totalUsers: number;
   verifiedUsers: number;
   activeUsers: number;
+  totalJobTypePosts: number;
+  activeJobTypePosts: number;
+  totalAdTypePosts: number;
+  activeAdTypePosts: number;
+  closedJobTypePosts: number;
+  closedAdTypePosts: number;
 }
 
 export interface StatisticCard {

@@ -76,15 +76,15 @@ const getCacheKey = (prefix: string, params?: Record<string, any>) => {
 const getFromCache = <T>(key: string): T | null => {
   const entry = cache.get(key);
   performanceMetrics.totalRequests++;
-  
+
   if (!entry) return null;
-  
+
   const now = Date.now();
   if (now - entry.timestamp > entry.ttl) {
     cache.delete(key);
     return null;
   }
-  
+
   performanceMetrics.cacheHits++;
   performanceMetrics.cacheHitRate = (performanceMetrics.cacheHits / performanceMetrics.totalRequests) * 100;
   console.log(`Cache HIT: ${key} (Hit Rate: ${performanceMetrics.cacheHitRate.toFixed(1)}%)`);
@@ -106,7 +106,7 @@ const clearCache = (pattern?: string): void => {
     console.log('Cache cleared: ALL');
     return;
   }
-  
+
   const keysToDelete = Array.from(cache.keys()).filter(key => key.includes(pattern));
   keysToDelete.forEach(key => cache.delete(key));
   console.log(`Cache cleared: ${keysToDelete.length} entries matching "${pattern}"`);
@@ -121,6 +121,12 @@ interface BasicStats {
   totalUsers: number;
   verifiedUsers: number;
   activeUsers: number;
+  totalJobTypePosts: number;
+  activeJobTypePosts: number;
+  totalAdTypePosts: number;
+  activeAdTypePosts: number;
+  closedJobTypePosts: number;
+  closedAdTypePosts: number;
 }
 
 // Lightweight stats for frequent updates
@@ -141,7 +147,7 @@ export const useDashboardServices = () => {
   // Lightweight stats for quick dashboard previews
   const getLightweightStats = async (): Promise<LightweightStats> => {
     const cacheKey = getCacheKey('lightweight_stats', { isProduction: Env.isProduction });
-    
+
     const cachedData = getFromCache<LightweightStats>(cacheKey);
     if (cachedData) {
       return cachedData;
@@ -171,7 +177,7 @@ export const useDashboardServices = () => {
 
       setCache(cacheKey, result, CACHE_TTL.LIGHTWEIGHT_STATS);
       console.log(`Lightweight stats fetched in ${responseTime}ms`);
-      
+
       return result;
     } catch (error) {
       console.error("Error fetching lightweight statistics:", error);
@@ -182,7 +188,7 @@ export const useDashboardServices = () => {
   // Optimized basic statistics with better batching
   const getBasicStatistics = async (): Promise<BasicStats> => {
     const cacheKey = getCacheKey('basic_stats', { isProduction: Env.isProduction });
-    
+
     // Try to get from cache first
     const cachedData = getFromCache<BasicStats>(cacheKey);
     if (cachedData) {
@@ -192,7 +198,7 @@ export const useDashboardServices = () => {
     try {
       const startTime = Date.now();
       console.log('Fetching basic statistics from Firebase...');
-      
+
       // Optimize batching - group by collection type for better performance
       const batchedQueries: BatchedQueries = {
         jobQueries: [
@@ -212,6 +218,54 @@ export const useDashboardServices = () => {
           ),
           getCountFromServer(
             query(hiredJobsRef, where("isProduction", "==", Env.isProduction))
+          ),
+          // Job type statistics
+          getCountFromServer(
+            query(
+              jobPostsRef,
+              where("post_type", "==", "job"),
+              where("isProduction", "==", Env.isProduction)
+            )
+          ),
+          getCountFromServer(
+            query(
+              jobPostsRef,
+              where("post_type", "==", "job"),
+              where("isActive", "==", true),
+              where("isProduction", "==", Env.isProduction)
+            )
+          ),
+          getCountFromServer(
+            query(
+              jobPostsRef,
+              where("post_type", "==", "ad"),
+              where("isProduction", "==", Env.isProduction)
+            )
+          ),
+          getCountFromServer(
+            query(
+              jobPostsRef,
+              where("post_type", "==", "ad"),
+              where("isActive", "==", true),
+              where("isProduction", "==", Env.isProduction)
+            )
+          ),
+          // Closed job type statistics
+          getCountFromServer(
+            query(
+              jobPostsRef,
+              where("post_type", "==", "job"),
+              where("isActive", "==", false),
+              where("isProduction", "==", Env.isProduction)
+            )
+          ),
+          getCountFromServer(
+            query(
+              jobPostsRef,
+              where("post_type", "==", "ad"),
+              where("isActive", "==", false),
+              where("isProduction", "==", Env.isProduction)
+            )
           )
         ],
         userQueries: [
@@ -223,7 +277,7 @@ export const useDashboardServices = () => {
 
       // Execute batched queries in parallel
       const [
-        [jobStats, activeJobsCount, totalSavedJobs, totalHiredJobs],
+        [jobStats, activeJobsCount, totalSavedJobs, totalHiredJobs, totalJobTypePosts, activeJobTypePosts, totalAdTypePosts, activeAdTypePosts, closedJobTypePosts, closedAdTypePosts],
         [totalUsers, verifiedUsers, activeUsers]
       ] = await Promise.all([
         Promise.all(batchedQueries.jobQueries),
@@ -232,7 +286,7 @@ export const useDashboardServices = () => {
 
       // Note: Removed expensive collectionGroup queries for applications and applicants
       // These should be tracked via counter documents or computed periodically
-      
+
       const result: BasicStats = {
         totalJobsPosted: jobStats.data().totalJobsPosted,
         activeJobPosts: activeJobsCount.data().count,
@@ -241,6 +295,12 @@ export const useDashboardServices = () => {
         totalUsers: totalUsers.data().count,
         verifiedUsers: verifiedUsers.data().count,
         activeUsers: activeUsers.data().count,
+        totalJobTypePosts: totalJobTypePosts.data().count,
+        activeJobTypePosts: activeJobTypePosts.data().count,
+        totalAdTypePosts: totalAdTypePosts.data().count,
+        activeAdTypePosts: activeAdTypePosts.data().count,
+        closedJobTypePosts: closedJobTypePosts.data().count,
+        closedAdTypePosts: closedAdTypePosts.data().count,
       };
 
       const responseTime = Date.now() - startTime;
@@ -249,7 +309,7 @@ export const useDashboardServices = () => {
 
       // Cache the result
       setCache(cacheKey, result, CACHE_TTL.BASIC_STATS);
-      
+
       return result;
     } catch (error) {
       console.error("Error fetching basic statistics:", error);
@@ -259,7 +319,7 @@ export const useDashboardServices = () => {
 
   const getUserStatistics = async (): Promise<UserStatistics> => {
     const cacheKey = getCacheKey('user_stats', { isProduction: Env.isProduction });
-    
+
     // Try to get from cache first
     const cachedData = getFromCache<UserStatistics>(cacheKey);
     if (cachedData) {
@@ -268,7 +328,7 @@ export const useDashboardServices = () => {
 
     try {
       console.log('Fetching user statistics from Firebase...');
-      
+
       const basicStats = await getBasicStatistics();
 
 
@@ -280,11 +340,17 @@ export const useDashboardServices = () => {
         totalUsers: basicStats.totalUsers,
         verifiedUsers: basicStats.verifiedUsers,
         activeUsers: basicStats.activeUsers,
+        totalJobTypePosts: basicStats.totalJobTypePosts,
+        activeJobTypePosts: basicStats.activeJobTypePosts,
+        totalAdTypePosts: basicStats.totalAdTypePosts,
+        activeAdTypePosts: basicStats.activeAdTypePosts,
+        closedJobTypePosts: basicStats.closedJobTypePosts,
+        closedAdTypePosts: basicStats.closedAdTypePosts,
       };
 
       // Cache the result
       setCache(cacheKey, result, CACHE_TTL.BASIC_STATS);
-      
+
       return result;
     } catch (error) {
       console.error("Error fetching user statistics:", error);

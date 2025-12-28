@@ -246,14 +246,25 @@ export default function JobCard({ job }: Props) {
                   thousandSeparator
                 />
               </Text>
-              <span
-                className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.isProduction
-                  ? "bg-blue-100 text-blue-800"
+              <Group>
+                <span
+                  className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.post_type
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-orange-100 text-orange-800"
+                    }`}
+                >
+                  {job.post_type ? "Job" : "Ad"}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.isProduction
+                    ? "bg-blue-100 text-blue-800"
                     : "bg-yellow-100 text-yellow-800"
-                  }`}
-              >
-                {job.isProduction ? "Production" : "Development"}
-              </span>
+                    }`}
+                >
+                  {job.isProduction ? "Prod" : "Dev"}
+                </span>
+              </Group>
+
             </Group>
           </Card>
         </div>

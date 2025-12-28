@@ -191,6 +191,7 @@ export default function NotificationCenter() {
                   label="Notification Title"
                   placeholder="Enter notification title"
                   {...form.getInputProps("title")}
+                  maxLength={40}
                 />
 
                 <Textarea
@@ -199,6 +200,7 @@ export default function NotificationCenter() {
                   autosize
                   minRows={4}
                   maxRows={8}
+                  maxLength={160}
                   {...form.getInputProps("body")}
                 />
 

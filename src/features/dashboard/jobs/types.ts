@@ -18,6 +18,7 @@ export interface IJobPost {
   budget: number;
   category: string | ICategory;
   commitment: string;
+  post_type: string | "ad" | "job";
   country: {
     code: string;
     name: string;
