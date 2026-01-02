@@ -258,12 +258,12 @@ export default function JobCard({ job }: Props) {
               </Text>
               <Group>
                 <span
-                  className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.post_type
+                  className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.post_type =="job"
                     ? "bg-purple-100 text-purple-800"
                     : "bg-orange-100 text-orange-800"
                     }`}
                 >
-                  {job.post_type ? "Job" : "Ad"}
+                  {job.post_type =="job" ? "Job" : "Ad"}
                 </span>
                 <span
                   className={`inline-flex items-center rounded-[7px] px-2 py-1 text-xs font-medium ${job.isProduction
