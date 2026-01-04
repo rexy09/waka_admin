@@ -9,8 +9,10 @@ import {
   Group,
   Image,
   Loader,
+  Modal,
   NumberFormatter,
   Paper,
+  Radio,
   ScrollArea,
   SimpleGrid,
   Space,
@@ -44,7 +46,7 @@ import { FaMapMarkedAlt } from "react-icons/fa";
 export default function PostedJobDetails() {
   const navigate = useNavigate();
 
-  const { getJob, getJobBids, getJobApplications, getAllHiredJobApplications } =
+  const { getJob, getJobBids, getJobApplications, getAllHiredJobApplications, updateJobPostType, toggleJobStatus, deleteJobPost } =
     useJobServices();
   const { id } = useParams();
 
@@ -58,6 +60,13 @@ export default function PostedJobDetails() {
   >([]);
   const [loadingHired, setLoadingHired] = useState(false);
   const [activeTab, setActiveTab] = useState("applicants");
+  const [updatingPostType, setUpdatingPostType] = useState(false);
+  const [postTypeModalOpened, setPostTypeModalOpened] = useState(false);
+  const [selectedPostType, setSelectedPostType] = useState<"ad" | "job">("job");
+  const [closeJobModalOpened, setCloseJobModalOpened] = useState(false);
+  const [deleteJobModalOpened, setDeleteJobModalOpened] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
+  const [deletingJob, setDeletingJob] = useState(false);
 
   const tabs = [
     { id: "applicants", label: "Applicants" },
@@ -156,6 +165,89 @@ export default function PostedJobDetails() {
       } (${encodeURIComponent(job?.location.address ?? "")})`,
       "_blank"
     );
+  };
+
+  const handleOpenPostTypeModal = () => {
+    if (job) {
+      const postType = job.post_type;
+      setSelectedPostType(postType === "ad" || postType === "job" ? postType : "job");
+      setPostTypeModalOpened(true);
+    }
+  };
+
+  const handleSubmitPostTypeChange = async () => {
+    if (!job) return;
+
+    setUpdatingPostType(true);
+    try {
+      await updateJobPostType(job.id, selectedPostType);
+      setJob({ ...job, post_type: selectedPostType });
+      notifications.show({
+        color: "green",
+        title: "Success",
+        message: `Post type updated to ${selectedPostType.toUpperCase()}`,
+      });
+      setPostTypeModalOpened(false);
+    } catch (error) {
+      console.error("Error updating post type:", error);
+      notifications.show({
+        color: "red",
+        title: "Error",
+        message: "Failed to update post type. Please try again.",
+      });
+    } finally {
+      setUpdatingPostType(false);
+    }
+  };
+
+  const handleToggleJobStatus = async () => {
+    if (!job) return;
+
+    setTogglingStatus(true);
+    try {
+      const newStatus = await toggleJobStatus(job.id);
+      setJob({ ...job, isActive: newStatus });
+      notifications.show({
+        color: "green",
+        title: "Success",
+        message: `Job ${newStatus ? "reopened" : "closed"} successfully`,
+      });
+      setCloseJobModalOpened(false);
+    } catch (error) {
+      console.error("Error toggling job status:", error);
+      notifications.show({
+        color: "red",
+        title: "Error",
+        message: "Failed to update job status. Please try again.",
+      });
+    } finally {
+      setTogglingStatus(false);
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (!job) return;
+
+    setDeletingJob(true);
+    try {
+      await deleteJobPost(job.id);
+      notifications.show({
+        color: "green",
+        title: "Success",
+        message: "Job deleted successfully",
+      });
+      setDeleteJobModalOpened(false);
+      // Navigate back to jobs list after deletion
+      navigate("/jobs");
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      notifications.show({
+        color: "red",
+        title: "Error",
+        message: "Failed to delete job. Please try again.",
+      });
+      setDeletingJob(false);
+    }
   };
 
   const applicationsCards = applications.map((application) => (
@@ -295,6 +387,127 @@ export default function PostedJobDetails() {
 
   return (
     <div>
+      <Modal
+        opened={postTypeModalOpened}
+        onClose={() => setPostTypeModalOpened(false)}
+        title="Change Post Type"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            Select the post type for this job listing:
+          </Text>
+          <Radio.Group
+            value={selectedPostType}
+            onChange={(value) => {
+              if (value === "ad" || value === "job") {
+                setSelectedPostType(value);
+              }
+            }}
+          >
+            <Stack gap="sm">
+              <Radio
+                value="job"
+                label="Job"
+                description="Regular job posting"
+              />
+              <Radio
+                value="ad"
+                label="Ad"
+                description="Promotional advertisement"
+              />
+            </Stack>
+          </Radio.Group>
+          <Group justify="flex-end" gap="sm" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => setPostTypeModalOpened(false)}
+              disabled={updatingPostType}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitPostTypeChange}
+              loading={updatingPostType}
+            >
+              Submit
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+      <Modal
+        opened={closeJobModalOpened}
+        onClose={() => setCloseJobModalOpened(false)}
+        title={job?.isActive ? "Close Job" : "Reopen Job"}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Are you sure you want to {job?.isActive ? "close" : "reopen"} this job?
+          </Text>
+          <Text size="sm" fw={600}>
+            {job?.title || getCategoryText(job?.category || "")}
+          </Text>
+          {job?.isActive && (
+            <Text size="xs" c="dimmed">
+              Closing this job will prevent new applications but won't delete existing ones.
+            </Text>
+          )}
+          <Group justify="flex-end" gap="sm" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => setCloseJobModalOpened(false)}
+              disabled={togglingStatus}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleToggleJobStatus}
+              loading={togglingStatus}
+              color={job?.isActive ? "orange" : "green"}
+            >
+              {job?.isActive ? "Close Job" : "Reopen Job"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+      <Modal
+        opened={deleteJobModalOpened}
+        onClose={() => setDeleteJobModalOpened(false)}
+        title="Delete Job"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm" c="red" fw={600}>
+            ⚠️ Warning: This action cannot be undone!
+          </Text>
+          <Text size="sm">
+            Are you sure you want to permanently delete this job?
+          </Text>
+          <Text size="sm" fw={600}>
+            {job?.title || getCategoryText(job?.category || "")}
+          </Text>
+          <Text size="xs" c="dimmed">
+            This will permanently delete the job post and all associated data.
+          </Text>
+          <Group justify="flex-end" gap="sm" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => setDeleteJobModalOpened(false)}
+              disabled={deletingJob}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteJob}
+              loading={deletingJob}
+              color="red"
+            >
+              Delete Job
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
       <Group wrap="wrap" justify="space-between" align="start">
         <Group justify="start">
           <UnstyledButton onClick={() => navigate(-1)}>
@@ -304,6 +517,28 @@ export default function PostedJobDetails() {
             Job Details
           </Text>
         </Group>
+        {job && (
+          <Group gap="xs">
+            <Button
+              variant="light"
+              color={job.isActive ? "orange" : "green"}
+              onClick={() => setCloseJobModalOpened(true)}
+              size="sm"
+            >
+              {job.isActive ? "Close Job" : "Reopen Job"}
+            </Button>
+            {(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && (
+              <Button
+                variant="light"
+                color="red"
+                onClick={() => setDeleteJobModalOpened(true)}
+                size="sm"
+              >
+                Delete Job
+              </Button>
+            )}
+          </Group>
+        )}
       </Group>
       <Divider my="md" />
       <Grid>
@@ -316,17 +551,31 @@ export default function PostedJobDetails() {
                     <Text size="18px" fw={600} c="#141514">
                       {job.title ? job.title : getCategoryText(job.category)}
                     </Text>
-                    {job && (
-                      <Badge
-                        color={!job?.isActive ? "#E53935" : "#044299"}
-                        radius="sm"
-                        size="lg"
-                      >
-                        <Text size="xs" fw={500} c="#FFFFFF" tt={"capitalize"}>
-                          {!job?.isActive ? "Closed" : "Active"}
-                        </Text>
-                      </Badge>
-                    )}
+                    <Group gap="xs">
+                      {job && (
+                        <Badge
+                          color={!job?.isActive ? "#E53935" : "#044299"}
+                          radius="sm"
+                          size="lg"
+                        >
+                          <Text size="xs" fw={500} c="#FFFFFF" tt={"capitalize"}>
+                            {!job?.isActive ? "Closed" : "Active"}
+                          </Text>
+                        </Badge>
+                      )}
+                      {job?.post_type && (
+                        <Badge
+                          color={job.post_type === "ad" ? "#FF6B35" : "#6247BA"}
+                          radius="sm"
+                          size="lg"
+                          variant="light"
+                        >
+                          <Text size="xs" fw={600} tt={"uppercase"}>
+                            {job.post_type}
+                          </Text>
+                        </Badge>
+                      )}
+                    </Group>
                   </Group>
                   <Group wrap="nowrap" gap={2} mt={"xs"}>
                     <IoTimeOutline size={12} />
@@ -452,6 +701,29 @@ export default function PostedJobDetails() {
                       </Text>
                     </div>
                   </Group>
+                  <Group wrap="nowrap" mt={"xs"}>
+                    <div style={{ flex: 1 }}>
+                      <Text size="12px" fw={700} c="#7F7D7D" mb={"5px"}>
+                        Post Type
+                      </Text>
+                      <Group gap="xs" align="center">
+                        <Badge
+                          size="lg"
+                          variant="light"
+                          color={job.post_type === "ad" ? "orange" : "violet"}
+                        >
+                          {job.post_type?.toUpperCase() || "JOB"}
+                        </Badge>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={handleOpenPostTypeModal}
+                        >
+                          Change
+                        </Button>
+                      </Group>
+                    </div>
+                  </Group>
                 </div>
               </Card>
               {job.imageUrls.length > 0 && (
@@ -557,8 +829,8 @@ export default function PostedJobDetails() {
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
                       className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                          ? "bg-[#151F42] text-white shadow-sm"
-                          : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+                        ? "bg-[#151F42] text-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
                         }`}
                     >
                       {tab.label} {tab.id === "hired" && `(${hiredApplications.length})`} {tab.id === "applicants" && `(${applications.length})`}
@@ -630,8 +902,8 @@ export default function PostedJobDetails() {
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
                       className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                          ? "bg-[#151F42] text-white shadow-sm"
-                          : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
+                        ? "bg-[#151F42] text-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-200"
                         }`}
                     >
                       {tab.label}

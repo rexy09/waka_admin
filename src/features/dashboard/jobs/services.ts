@@ -1029,6 +1029,105 @@ export const useJobServices = () => {
     return count;
   };
 
+  const updateJobPostType = async (jobId: string, postType: "ad" | "job") => {
+    const jobQuery = query(jobPostsRef, where("id", "==", jobId));
+    const jobSnapshot = await getDocs(jobQuery);
+
+    if (jobSnapshot.empty) {
+      throw new Error("Job not found");
+    }
+
+    const jobDoc = jobSnapshot.docs[0];
+    await updateDoc(jobDoc.ref, {
+      post_type: postType,
+    });
+
+    return true;
+  };
+
+  const toggleJobStatus = async (jobId: string) => {
+    const jobQuery = query(jobPostsRef, where("id", "==", jobId));
+    const jobSnapshot = await getDocs(jobQuery);
+
+    if (jobSnapshot.empty) {
+      throw new Error("Job not found");
+    }
+
+    const jobDoc = jobSnapshot.docs[0];
+    const currentStatus = jobDoc.data().isActive;
+
+    await updateDoc(jobDoc.ref, {
+      isActive: !currentStatus,
+    });
+
+    return !currentStatus;
+  };
+
+  const deleteJobPost = async (jobId: string) => {
+    const jobQuery = query(jobPostsRef, where("id", "==", jobId));
+    const jobSnapshot = await getDocs(jobQuery);
+
+    if (jobSnapshot.empty) {
+      throw new Error("Job not found");
+    }
+
+    const jobDoc = jobSnapshot.docs[0];
+
+    // Delete subcollections: applications
+    const applicationsCollection = collection(jobDoc.ref, "applications");
+    const applicationsSnapshot = await getDocs(applicationsCollection);
+    const deleteApplicationsPromises = applicationsSnapshot.docs.map((doc) =>
+      deleteDoc(doc.ref)
+    );
+    await Promise.all(deleteApplicationsPromises);
+
+    // Delete subcollections: bids
+    const bidsCollection = collection(jobDoc.ref, "bids");
+    const bidsSnapshot = await getDocs(bidsCollection);
+    const deleteBidsPromises = bidsSnapshot.docs.map((doc) =>
+      deleteDoc(doc.ref)
+    );
+    await Promise.all(deleteBidsPromises);
+
+    // Delete from savedJobs collection
+    const savedJobsQuery = query(
+      savedJobsRef,
+      where("jobId", "==", jobId),
+      where("isProduction", "==", Env.isProduction)
+    );
+    const savedJobsSnapshot = await getDocs(savedJobsQuery);
+    const deleteSavedJobsPromises = savedJobsSnapshot.docs.map((doc) =>
+      deleteDoc(doc.ref)
+    );
+    await Promise.all(deleteSavedJobsPromises);
+
+    // Delete from hiredJobs collection and its subcollections
+    const hiredJobsQuery = query(
+      hiredJobsRef,
+      where("jobId", "==", jobId),
+      where("isProduction", "==", Env.isProduction)
+    );
+    const hiredJobsSnapshot = await getDocs(hiredJobsQuery);
+
+    for (const hiredJobDoc of hiredJobsSnapshot.docs) {
+      // Delete applicants subcollection
+      const applicantsCollection = collection(hiredJobDoc.ref, "applicants");
+      const applicantsSnapshot = await getDocs(applicantsCollection);
+      const deleteApplicantsPromises = applicantsSnapshot.docs.map((doc) =>
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deleteApplicantsPromises);
+
+      // Delete the hiredJob document
+      await deleteDoc(hiredJobDoc.ref);
+    }
+
+    // Finally, delete the job post itself
+    await deleteDoc(jobDoc.ref);
+
+    return true;
+  };
+
   return {
     getJobs,
     getJob,
@@ -1060,6 +1159,9 @@ export const useJobServices = () => {
     getUserSavedJobsCount,
     getUserHiredJobsCount,
     getUserPostedJobsCount,
+    updateJobPostType,
+    toggleJobStatus,
+    deleteJobPost,
   };
 };
 

@@ -33,126 +33,167 @@ export default function DashboardStatistics() {
     fetchBasicStatistics();
   }, [fetchBasicStatistics]);
 
-  const statSkeletons = Array.from({ length: 13 }, (_, index) => (
-    <Skeleton key={index} height={120} radius="md" />
-  ));
-
-  const statisticsCards = basicStats
-    ? [
-      {
-        title: "Total Jobs Posted",
-        value: basicStats.totalJobsPosted,
-        color: "#4968D5",
-        icon: <FaBriefcase size="1.2rem" />,
-      },
-
-      {
-        title: "Active Job Posts",
-        value: basicStats.activeJobPosts,
-        color: "#22c55e",
-        icon: <FaCheckCircle size="1.2rem" />,
-      },
-
-      {
-        title: "Total Jobs",
-        value: basicStats.totalJobTypePosts,
-        color: "#9333ea",
-        icon: <FaBriefcase size="1.2rem" />,
-      },
-
-      {
-        title: "Active Jobs",
-        value: basicStats.activeJobTypePosts,
-        color: "#16a34a",
-        icon: <FaCheckCircle size="1.2rem" />,
-      },
-
-      {
-        title: "Closed Jobs",
-        value: basicStats.closedJobTypePosts,
-        color: "#dc2626",
-        icon: <FaCheckCircle size="1.2rem" />,
-      },
-
-      {
-        title: "Total Ads",
-        value: basicStats.totalAdTypePosts,
-        color: "#f97316",
-        icon: <FaBullhorn size="1.2rem" />,
-      },
-
-      {
-        title: "Active Ads",
-        value: basicStats.activeAdTypePosts,
-        color: "#14b8a6",
-        icon: <FaCheckCircle size="1.2rem" />,
-      },
-
-      {
-        title: "Closed Ads",
-        value: basicStats.closedAdTypePosts,
-        color: "#6b7280",
-        icon: <FaCheckCircle size="1.2rem" />,
-      },
-
-      {
-        title: "Total Hired Jobs",
-        value: basicStats.totalHiredJobs,
-        color: "#ef4444",
-        icon: <FaHeart size="1.2rem" />,
-      },
-
-      {
-        title: "Closed but Not Hired",
-        value: ((basicStats.closedJobTypePosts ?? 0) + (basicStats.closedAdTypePosts ?? 0)) - (basicStats.totalHiredJobs ?? 0),
-        color: "#f59e0b",
-        icon: <FaBriefcase size="1.2rem" />,
-      },
-
-      {
-        title: "Total Users",
-        value: basicStats.totalUsers,
-        color: "#3b82f6",
-        icon: <FaUsers size="1.2rem" />,
-      },
-      {
-        title: "Verified Users",
-        value: basicStats.verifiedUsers,
-        color: "#059669",
-        icon: <FaUserShield size="1.2rem" />,
-      },
-
-      {
-        title: "Active Users",
-        value: basicStats.activeUsers,
-        color: "#7c3aed",
-        icon: <FaCheckCircle size="1.2rem" />,
-      },
-    ]
-    : [];
-
   return (
     <Container size="xl" p={0}>
-      <Stack>
+      <Stack gap="xl">
+        {/* Job Posts Overview Section */}
         <div>
-          <Title order={3}>Overview</Title>
+          <Title order={3} mb="md">Job Posts Overview</Title>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {isLoadingBasic ? (
+              <>
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+              </>
+            ) : (
+              <>
+                <StatisticsCard
+                  title="Total Jobs Posted"
+                  value={basicStats?.totalJobsPosted ?? "..."}
+                  color="#4968D5"
+                  icon={<FaBriefcase size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Active Job Posts"
+                  value={basicStats?.activeJobPosts ?? "..."}
+                  color="#22c55e"
+                  icon={<FaCheckCircle size="1.2rem" />}
+                />
+              </>
+            )}
+          </SimpleGrid>
         </div>
 
+        {/* Jobs (post_type: job) Section */}
         <div>
+          <Title order={3} mb="md">Jobs Statistics</Title>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-            {isLoadingBasic
-              ? statSkeletons
-              : statisticsCards.map((card, index) => {
-                return (
-                  <StatisticsCard
-                    key={index}
-                    title={card.title}
-                    value={card.value ?? "..."}
-                    color={card.color}
-                    icon={card.icon}
-                  />
-                );
-              })}
+            {isLoadingBasic ? (
+              <>
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+              </>
+            ) : (
+              <>
+                <StatisticsCard
+                  title="Total Jobs"
+                  value={basicStats?.totalJobTypePosts ?? "..."}
+                  color="#9333ea"
+                  icon={<FaBriefcase size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Active Jobs"
+                  value={basicStats?.activeJobTypePosts ?? "..."}
+                  color="#16a34a"
+                  icon={<FaCheckCircle size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Closed Jobs"
+                  value={basicStats?.closedJobTypePosts ?? "..."}
+                  color="#dc2626"
+                  icon={<FaCheckCircle size="1.2rem" />}
+                />
+              </>
+            )}
+          </SimpleGrid>
+        </div>
+
+        {/* Ads (post_type: ad) Section */}
+        <div>
+          <Title order={3} mb="md">Ads Statistics</Title>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {isLoadingBasic ? (
+              <>
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+              </>
+            ) : (
+              <>
+                <StatisticsCard
+                  title="Total Ads"
+                  value={basicStats?.totalAdTypePosts ?? "..."}
+                  color="#f97316"
+                  icon={<FaBullhorn size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Active Ads"
+                  value={basicStats?.activeAdTypePosts ?? "..."}
+                  color="#14b8a6"
+                  icon={<FaCheckCircle size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Closed Ads"
+                  value={basicStats?.closedAdTypePosts ?? "..."}
+                  color="#6b7280"
+                  icon={<FaCheckCircle size="1.2rem" />}
+                />
+              </>
+            )}
+          </SimpleGrid>
+        </div>
+
+        {/* Hiring Statistics Section */}
+        <div>
+          <Title order={3} mb="md">Hiring Statistics</Title>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {isLoadingBasic ? (
+              <>
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+              </>
+            ) : (
+              <>
+                <StatisticsCard
+                  title="Total Hired Jobs"
+                  value={basicStats?.totalHiredJobs ?? "..."}
+                  color="#ef4444"
+                  icon={<FaHeart size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Closed but Not Hired"
+                  value={((basicStats?.closedJobTypePosts ?? 0) + (basicStats?.closedAdTypePosts ?? 0)) - (basicStats?.totalHiredJobs ?? 0)}
+                  color="#f59e0b"
+                  icon={<FaBriefcase size="1.2rem" />}
+                />
+              </>
+            )}
+          </SimpleGrid>
+        </div>
+
+        {/* User Statistics Section */}
+        <div>
+          <Title order={3} mb="md">User Statistics</Title>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {isLoadingBasic ? (
+              <>
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+                <Skeleton height={120} radius="md" />
+              </>
+            ) : (
+              <>
+                <StatisticsCard
+                  title="Total Users"
+                  value={basicStats?.totalUsers ?? "..."}
+                  color="#3b82f6"
+                  icon={<FaUsers size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Verified Users"
+                  value={basicStats?.verifiedUsers ?? "..."}
+                  color="#059669"
+                  icon={<FaUserShield size="1.2rem" />}
+                />
+                <StatisticsCard
+                  title="Active Users"
+                  value={basicStats?.activeUsers ?? "..."}
+                  color="#7c3aed"
+                  icon={<FaCheckCircle size="1.2rem" />}
+                />
+              </>
+            )}
           </SimpleGrid>
         </div>
       </Stack>
