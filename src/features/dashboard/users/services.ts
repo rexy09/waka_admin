@@ -47,6 +47,11 @@ export const useUserServices = () => {
         baseConstraints.push(where("userType", "==", filters.userType));
       }
 
+      // Add email filter for exact match
+      if (filters.searchTerm && filters.searchTerm.includes('@')) {
+        baseConstraints.push(where("email", "==", filters.searchTerm.toLowerCase()));
+      }
+
       // Add date range filters
       if (filters.dateFrom) {
         const fromDate = new Date(filters.dateFrom);
@@ -90,15 +95,6 @@ export const useUserServices = () => {
         id: doc.id,
       })) as IUser[];
 
-      // Apply client-side filters for search term only
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        usersList = usersList.filter(user =>
-          user.fullName?.toLowerCase().includes(searchLower) ||
-          user.email?.toLowerCase().includes(searchLower)
-        );
-      }
-
       return {
         data: usersList,
         totalCount,
@@ -112,7 +108,7 @@ export const useUserServices = () => {
   };
 
   const getUserById = async (userId: string) => {
-    
+
     try {
       const userQuery = query(
         usersRef,

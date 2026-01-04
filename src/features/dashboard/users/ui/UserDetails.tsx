@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Card,
+  Collapse,
   Container,
   Divider,
   Grid,
@@ -35,10 +36,10 @@ import {
   MdFemale,
   MdTransgender,
 } from "react-icons/md";
+import { IoArrowBack, IoChevronDown, IoChevronUp } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
 import { IUser } from "../../../auth/types";
 import { useUserServices } from "../services";
-import { IoArrowBack } from "react-icons/io5";
 import SendNotificationModal from "../components/SendNotificationModal";
 import MyJobs from "../../jobs/ui/MyJobs";
 import { Color } from "../../../../common/theme";
@@ -53,6 +54,7 @@ function UserDetails() {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tokensCollapsed, setTokensCollapsed] = useState(true);
 
   // Use React Query hook for cached job counts
   const { data: jobCounts, isLoading: isLoadingCounts } = useUserJobCounts(id);
@@ -162,8 +164,8 @@ function UserDetails() {
         user.userType === "individual"
           ? "teal"
           : user.userType === "institute"
-          ? "violet"
-          : "gray",
+            ? "violet"
+            : "gray",
       icon:
         user.userType === "individual" ? (
           <MdPerson size={14} />
@@ -272,8 +274,8 @@ function UserDetails() {
                           user.gender === "Male"
                             ? "blue"
                             : user.gender === "Female"
-                            ? "pink"
-                            : "gray"
+                              ? "pink"
+                              : "gray"
                         }
                         radius="xl"
                         size="lg"
@@ -470,16 +472,16 @@ function UserDetails() {
                     <Text size="sm" fw={500}>
                       {user.dateAdded
                         ? new Date(
-                            typeof user.dateAdded === "string"
-                              ? user.dateAdded
-                              : (user.dateAdded as any).toDate()
-                          ).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                          typeof user.dateAdded === "string"
+                            ? user.dateAdded
+                            : (user.dateAdded as any).toDate()
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
                         : "Unknown"}
                     </Text>
                   </div>
@@ -493,22 +495,62 @@ function UserDetails() {
                     <Text size="sm" fw={500}>
                       {user.dateUpdated
                         ? new Date(
-                            typeof user.dateUpdated === "string"
-                              ? user.dateUpdated
-                              : (user.dateUpdated as any).toDate()
-                          ).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                          typeof user.dateUpdated === "string"
+                            ? user.dateUpdated
+                            : (user.dateUpdated as any).toDate()
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
                         : "Unknown"}
                     </Text>
                   </div>
                 </Grid.Col>
               </Grid>
             </Card>
+
+             {/* Notification Tokens (Admin Only) */}
+      {user.fcmTokens && user.fcmTokens.length > 0 && (
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          <Group justify="space-between" mb="md">
+            <Title order={3}>
+              Push Notification Tokens ({user.fcmTokens.length})
+            </Title>
+            <Button
+              variant="subtle"
+              size="xs"
+              onClick={() => setTokensCollapsed(!tokensCollapsed)}
+              rightSection={tokensCollapsed ? <IoChevronDown size={16} /> : <IoChevronUp size={16} />}
+            >
+              {tokensCollapsed ? "Show" : "Hide"}
+            </Button>
+          </Group>
+          <Collapse in={!tokensCollapsed}>
+            <Stack gap="xs">
+              {user.fcmTokens.map((token, index) => (
+                <div key={index} className="bg-gray-50 rounded-lg p-2">
+                  <Group gap="xs">
+                    <Text size="xs" className="font-mono flex-1 truncate">
+                      {token}
+                    </Text>
+                    <Tooltip label="Copy token">
+                      <button
+                        onClick={() => handleCopy(token, "Token")}
+                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                      >
+                        <MdContentCopy className="text-gray-500" size={14} />
+                      </button>
+                    </Tooltip>
+                  </Group>
+                </div>
+              ))}
+            </Stack>
+          </Collapse>
+        </Card>
+      )}
           </Stack>
         </Tabs.Panel>
 
@@ -517,33 +559,7 @@ function UserDetails() {
         </Tabs.Panel>
       </Tabs>
 
-      {/* Notification Tokens (Admin Only) */}
-      {/* {user.fcmTokens && user.fcmTokens.length > 0 && (
-                <Card shadow="sm" padding="lg" radius="md" withBorder>
-                    <Title order={3} mb="md">
-                        Push Notification Tokens
-                    </Title>
-                    <Stack gap="xs">
-                        {user.fcmTokens.map((token, index) => (
-                            <div key={index} className="bg-gray-50 rounded-lg p-2">
-                                <Group gap="xs">
-                                    <Text size="xs" className="font-mono flex-1 truncate">
-                                        {token}
-                                    </Text>
-                                    <Tooltip label="Copy token">
-                                        <button
-                                            onClick={() => handleCopy(token, "Token")}
-                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                                        >
-                                            <MdContentCopy className="text-gray-500" size={14} />
-                                        </button>
-                                    </Tooltip>
-                                </Group>
-                            </div>
-                        ))}
-                    </Stack>
-                </Card>
-            )} */}
+     
     </Stack>
   );
 }

@@ -39,7 +39,7 @@ export default function UserFilters({ onFiltersChange, filterOptions, isLoading 
     <Grid gutter="md" mb="md">
       <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
         <TextInput
-          placeholder="Search by name or email"
+          placeholder="Search by full email"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           disabled={isLoading}
