@@ -1,0 +1,525 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================================================================
+    // HELPER FUNCTIONS
+    // =================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Checks if the authenticated user posted the given job.
+    // Uses a document get() -- counts toward the 10-get-per-request limit.
+    function isJobPoster(jobId) {
+      return isAuthenticated()
+        && get(/databases/$(database)/documents/jobPosts/$(jobId)).data.postedByUserId == request.auth.uid;
+    }
+
+    // Checks if the authenticated user posted the given hired job.
+    function isHiredJobPoster(hiredJobId) {
+      return isAuthenticated()
+        && get(/databases/$(database)/documents/hiredJobs/$(hiredJobId)).data.postedByUserId == request.auth.uid;
+    }
+
+    // Checks if the authenticated user is an admin.
+    // Supports BOTH sources for backward compatibility:
+    //   1. Doc exists at /admins/{uid} (original approach, cheap exists() check)
+    //   2. users/{uid}.role == 'admin' (approach used by waka_admin dashboard)
+    // Short-circuits on the first match. Seed via Firebase Console or Admin SDK.
+    function isAdmin() {
+      return isAuthenticated() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        || (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        )
+      );
+    }
+
+    // True when the incoming write does NOT touch any of the forbidden fields.
+    // Used to prevent self-escalation (role, isVerified, etc.) on user updates.
+    function noForbiddenFieldsChanged(forbiddenFields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(forbiddenFields);
+    }
+
+    // =================================================================
+    // APP DATA (read-only config, no auth required)
+    // =================================================================
+    // Used by both web and mobile for version checks, feature flags, etc.
+    // Version check runs before Firebase Auth completes, so no auth gate.
+    match /appData/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // =================================================================
+    // USERS
+    // =================================================================
+    // Read: any authenticated user -- both web and mobile display other
+    // users' avatars, names, and profile info (job posters, applicants,
+    // bid authors). Firestore cannot do field-level access control.
+    // Write: owner only. Delete: prohibited (use account deletion flow).
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      // Users update their own profile but CANNOT change privileged fields
+      // (role, isVerified, isBanned, isBlocked) — those are admin-only.
+      allow update: if isOwner(userId)
+        && noForbiddenFieldsChanged(['role', 'isVerified', 'isBanned', 'isBlocked']);
+      // Admins can update any field, including privileged moderation fields.
+      allow update: if isAdmin();
+      allow delete: if false;
+
+      // Poll votes subcollection (under user document)
+      match /pollVotes/{voteId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
+      }
+    }
+
+    // =================================================================
+    // JOB POSTS
+    // =================================================================
+    // Read: PUBLIC. Anyone (including unauthenticated guests) can browse
+    // job listings. This enables the guest-mode job feed and SEO/sharing.
+    // Write: still restricted to the original poster.
+    match /jobPosts/{jobId} {
+      allow read: if true;
+      allow create: if isAuthenticated()
+        && request.resource.data.postedByUserId == request.auth.uid;
+      // Poster edits their own; admins can moderate any job.
+      allow update, delete: if (isAuthenticated()
+        && resource.data.postedByUserId == request.auth.uid)
+        || isAdmin();
+
+      // -- Applications subcollection --
+      // Split into two allow statements so collection group queries work.
+      // Firestore can't evaluate OR conditions that mix query-filter fields
+      // with path-dependent get() calls like isJobPoster(jobId).
+      match /applications/{applicationId} {
+        // Applicants read their own (works for collection group queries with where uid == auth.uid)
+        allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+        // Job posters read applications on their jobs (path-specific only)
+        allow read: if isJobPoster(jobId);
+        // Admins can read for moderation/stats.
+        allow read: if isAdmin();
+        allow create: if isAuthenticated()
+          && request.resource.data.uid == request.auth.uid;
+        allow update: if isJobPoster(jobId) || isAdmin();
+        allow delete: if isAdmin();
+      }
+
+      // -- Bids subcollection --
+      // Field: bidderId (canonical from mobile Bid model)
+      match /bids/{bidId} {
+        // Bidders read their own (works for collection group queries with where bidderId == auth.uid)
+        allow read: if isAuthenticated() && resource.data.bidderId == request.auth.uid;
+        // Job posters read bids on their jobs (path-specific only)
+        allow read: if isJobPoster(jobId);
+        // Admins can read for moderation/stats.
+        allow read: if isAdmin();
+        allow create: if isAuthenticated()
+          && request.resource.data.bidderId == request.auth.uid;
+        allow update: if isJobPoster(jobId) || isAdmin();
+        allow delete: if isAdmin();
+
+        // -- Comments subcollection (under bids) --
+        // Visible to the bidder and the job poster (bid negotiation parties).
+        match /comments/{commentId} {
+          allow read: if isAuthenticated()
+            && (get(/databases/$(database)/documents/jobPosts/$(jobId)/bids/$(bidId)).data.bidderId == request.auth.uid
+                || isJobPoster(jobId));
+          allow create: if isAuthenticated()
+            && request.resource.data.commenterUserId == request.auth.uid;
+          allow update: if isAuthenticated()
+            && resource.data.commenterUserId == request.auth.uid;
+          allow delete: if false;
+        }
+      }
+
+      // -- SmartHire results subcollection (dynamic name: application_{executionId}) --
+      // These are backend-only and accessed via Admin SDK which bypasses rules.
+      // The default deny-all catch-all handles blocking client access.
+    }
+
+    // =================================================================
+    // SAVED JOBS
+    // =================================================================
+    // Doc ID format: {jobId}_{userId}. The app reads this doc directly
+    // to check if the user saved a specific job. When the doc doesn't
+    // exist (user hasn't saved it), resource is null and resource.data
+    // access throws a permission error. Allow reads on non-existent
+    // docs so the "is saved?" check works.
+    match /savedJobs/{savedJobId} {
+      // Owner: per-doc check (allows null resource so "is saved?" probe works).
+      allow read: if isAuthenticated()
+        && (resource == null || resource.data.userId == request.auth.uid);
+      // Admins can list all for dashboard stats.
+      allow read: if isAdmin();
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+      // Owner deletes their save; admins can cascade-delete (e.g., when a job is removed).
+      allow delete: if (isAuthenticated()
+        && resource.data.userId == request.auth.uid)
+        || isAdmin();
+      allow update: if false;
+    }
+
+    // =================================================================
+    // HIRED JOBS
+    // =================================================================
+    // Read: any authenticated user. The parent document contains only job
+    // metadata (jobId, jobTitle, postedByUserId, dateHired). Sensitive
+    // hire details are in the applicants subcollection below.
+    // This is necessary because hired workers query hiredJobs to find
+    // their own records, but their UID is in the applicants subcollection,
+    // not the parent document.
+    match /hiredJobs/{hiredJobId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.postedByUserId == request.auth.uid;
+      // Poster manages their own; admins can moderate.
+      allow update: if (isAuthenticated()
+        && resource.data.postedByUserId == request.auth.uid)
+        || isAdmin();
+      allow delete: if isAdmin();
+
+      // -- Applicants subcollection --
+      // Split allow reads so collection group queries work (same pattern as applications).
+      match /applicants/{applicantId} {
+        // Hired workers read their own record (works for collection group queries)
+        allow read: if isAuthenticated() && resource.data.applicantUid == request.auth.uid;
+        // Job posters read applicants on their hired jobs (path-specific only)
+        allow read: if isHiredJobPoster(hiredJobId);
+        // Admins can read for moderation/stats.
+        allow read: if isAdmin();
+        allow create, update: if isHiredJobPoster(hiredJobId) || isAdmin();
+        allow delete: if isHiredJobPoster(hiredJobId) || isAdmin();
+      }
+    }
+
+    // =================================================================
+    // COLLECTION GROUP QUERY RULES
+    // =================================================================
+    // Firestore requires rules at the collection-group level (using the
+    // recursive {path=**} wildcard) for collection group queries to work.
+    // Nested rules inside a specific parent path don't satisfy static
+    // analysis for queries that span all parent paths.
+    //
+    // These rules ONLY grant read access to the document owner (matching
+    // the query filter). Path-specific access (e.g., a job poster reading
+    // all applications on their job) is still handled by the nested
+    // subcollection rules above.
+
+    // Collection group: applications (field: uid)
+    match /{path=**}/applications/{applicationId} {
+      allow read: if isAuthenticated()
+        && resource.data.uid == request.auth.uid;
+      // Admins list all applications for dashboard moderation/stats.
+      allow read: if isAdmin();
+    }
+
+    // Collection group: bids (field: bidderId)
+    match /{path=**}/bids/{bidId} {
+      allow read: if isAuthenticated()
+        && resource.data.bidderId == request.auth.uid;
+      allow read: if isAdmin();
+    }
+
+    // Collection group: applicants (field: applicantUid)
+    match /{path=**}/applicants/{applicantId} {
+      allow read: if isAuthenticated()
+        && resource.data.applicantUid == request.auth.uid;
+      allow read: if isAdmin();
+    }
+
+    // =================================================================
+    // NOTIFICATIONS
+    // =================================================================
+    // Create is open to any authenticated user because one user triggers
+    // notifications for another (e.g., "someone applied to your job").
+    // Cloud Functions also create notifications via Admin SDK.
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // =================================================================
+    // PORTFOLIO
+    // =================================================================
+    // Read: any authenticated user (portfolios are public profile data).
+    // Write: owner only.
+    match /portfolio/{portfolioId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // =================================================================
+    // JOB REPORTS
+    // =================================================================
+    // Reporter can create and read their own reports.
+    // Admin review happens via backend (Admin SDK).
+    match /jobReports/{reportId} {
+      // Reporter or reported user can read their own report (per-doc).
+      allow read: if isAuthenticated()
+        && (resource.data.reporterId == request.auth.uid
+            || resource.data.uid == request.auth.uid);
+      // Admins can list/read all reports (dashboard moderation + stats).
+      // Split into its own allow so collection/count queries pass static analysis.
+      allow read: if isAdmin();
+      allow create: if isAuthenticated()
+        && request.resource.data.reporterId == request.auth.uid;
+      // Admins review reports and add status/notes/actionTaken fields.
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // =================================================================
+    // USER REPORTS
+    // =================================================================
+    // Reporter can create and read their own reports.
+    // Reported user CANNOT see reports about them (prevents retaliation).
+    match /userReports/{reportId} {
+      // Reporter can read their own (per-doc).
+      allow read: if isAuthenticated()
+        && resource.data.reporterId == request.auth.uid;
+      // Admins can list/read all for moderation + stats.
+      allow read: if isAdmin();
+      allow create: if isAuthenticated()
+        && request.resource.data.reporterId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // =================================================================
+    // TRUSTED CONTACTS
+    // =================================================================
+    // Strictly owner-only. Private safety contacts.
+    match /trustedContacts/{contactId} {
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // =================================================================
+    // USER VERIFICATION
+    // =================================================================
+    // Read: any authenticated user. Verification status is shown as a
+    // public badge on profiles and job cards (trust signal), similar to
+    // Twitter's verified checkmark. Sensitive verification data (ID card
+    // images, face embeddings) should stay backend-only or be scoped via
+    // field-level segregation.
+    // Create: the user themselves. Approval (update) is admin-only via backend.
+    match /userVerification/{verificationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid;
+      // Admins approve/reject/update verification records from the dashboard.
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // =================================================================
+    // USER FEEDBACK
+    // =================================================================
+    // Users can submit and read their own feedback.
+    // Admin manages via backend.
+    match /userFeedback/{feedbackId} {
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // =================================================================
+    // USER BANS
+    // =================================================================
+    // Users can read their own ban records (app checks ban status on login).
+    // All write operations are admin-only via backend.
+    match /userBans/{banId} {
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // =================================================================
+    // REFERENCE DATA (public read, backend-only write)
+    // =================================================================
+    // Public so the guest job feed can render filters, category names,
+    // and commitment/location labels without requiring auth.
+    match /categories/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /commitmentTypes/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /workLocations/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /urgencyLevels/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // =================================================================
+    // ACCOUNT DELETION REQUESTS
+    // =================================================================
+    match /accountDeletionRequests/{requestId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // =================================================================
+    // ADMINS (dashboard authorization source)
+    // =================================================================
+    // One doc per admin, doc ID = Firebase Auth UID.
+    // The isAdmin() helper checks exists() on this collection.
+    // Seed/manage via Firebase Console or Admin SDK — client writes are blocked.
+    // Admins can read the list (e.g., to show "admin team" page).
+    match /admins/{adminUid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // =================================================================
+    // CHAT SYSTEM (mobile app)
+    // =================================================================
+    // Chats are community/group or personal conversations.
+    // Field: uid = chat creator/owner.
+    match /chats/{chatId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // Members track who belongs to which chat/community.
+    // Fields: uid = member's user ID, chatId = community ID.
+    // Update is open to authenticated users because:
+    //   - Users update their own doc (unreadMessages, lastSeen)
+    //   - Owners/admins promote/demote/remove members
+    // Full role checks would exceed the 10-get-per-request limit.
+    match /members/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // Messages within chats.
+    // Field: uid = message sender.
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated()
+        && resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Message reactions (emoji reactions on messages).
+    // Field: uid = reactor.
+    match /reactions/{reactionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if isAuthenticated()
+        && resource.data.uid == request.auth.uid;
+      allow delete: if isAuthenticated()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // =================================================================
+    // PARTNER & CERTIFICATION SYSTEM (mobile app)
+    // =================================================================
+    // Partners are institution profiles managed by backend/Admin SDK.
+    // Mobile app reads only.
+    match /partners/{partnerId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+
+      // Store items sold by this partner (marketplace).
+      match /storeItems/{itemId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
+
+      // Certification types offered by this partner.
+      match /certificationTypes/{typeId} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
+    }
+
+    // Worker certifications issued by partners.
+    // Created/updated/revoked by backend (Admin SDK).
+    // Field: userId = certified worker.
+    match /certifications/{certId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Applications to become a certified partner.
+    // Anyone authenticated can submit. Backend reviews.
+    match /partnerApplications/{appId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // Orders placed through the partner marketplace.
+    // Field: buyerUserId = purchaser.
+    match /partnerOrders/{orderId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.buyerUserId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // =================================================================
+    // EMPLOYER RATINGS (mobile app)
+    // =================================================================
+    // Workers rate employers after completing a job.
+    // Field: employeeId = worker who rates.
+    match /employerRatings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.employeeId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // =================================================================
+    // DEFAULT DENY-ALL
+    // =================================================================
+    // Any path not matched above is denied. Firestore rules are OR-based:
+    // if any match block allows access, it succeeds. This catch-all
+    // ensures unmatched collections are not accidentally accessible.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

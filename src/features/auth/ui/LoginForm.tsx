@@ -9,17 +9,17 @@ import {
 } from "@mantine/core";
 import { isEmail, isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useEffect } from "react";
 import useSignIn from "react-auth-kit/hooks/useSignIn";
 import { useNavigate } from "react-router-dom";
+import { auth } from "../../../config/firebase";
 import { Color } from "../../../common/theme";
 import useAuthServices from "../services";
 import { UserCredentials } from "../types";
 
 function LoginForm() {
   const { submitted, setSubmitted } = useAuthServices();
-  const auth = getAuth();
   const signIn = useSignIn();
 
   const navigate = useNavigate();

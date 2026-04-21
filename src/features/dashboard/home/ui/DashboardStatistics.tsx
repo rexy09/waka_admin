@@ -1,8 +1,10 @@
 import { Container, SimpleGrid, Skeleton, Stack, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { onAuthStateChanged } from "firebase/auth";
 import { useCallback, useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { FaBriefcase, FaHeart, FaUsers, FaUserShield, FaBullhorn } from "react-icons/fa6";
+import { auth } from "../../../../config/firebase";
 import { useDashboardServices } from "../services";
 import { UserStatistics } from "../types";
 import StatisticsCard from "./StatisticsCard";
@@ -29,8 +31,16 @@ export default function DashboardStatistics() {
     setIsLoadingBasic(false);
   }, []);
 
+  // Wait for the Firebase Auth session to be established before firing
+  // Firestore queries. Without this, the component mounts and sends
+  // unauthenticated aggregation queries that get rejected with 403.
   useEffect(() => {
-    fetchBasicStatistics();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchBasicStatistics();
+      }
+    });
+    return () => unsubscribe();
   }, [fetchBasicStatistics]);
 
   return (
