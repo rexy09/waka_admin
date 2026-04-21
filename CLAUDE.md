@@ -23,7 +23,7 @@ yarn preview     # Preview production build
 
 ## Architecture Overview
 
-This is a React 18 + TypeScript + Vite job marketplace application with the following key architectural patterns:
+This is a React 18 + TypeScript + Vite admin dashboard application for managing a job marketplace with the following key architectural patterns:
 
 ### Tech Stack
 - **Frontend**: React 18 + TypeScript + Vite
@@ -48,9 +48,10 @@ src/
 │   └── dashboard/      # Protected dashboard pages
 ├── features/           # Feature-based organization
 │   ├── auth/           # Authentication logic
-│   ├── dashboard/      # Dashboard features (jobs, profile, settings, notifications)
-│   ├── services/       # Shared API services
-│   └── hooks/          # Shared hooks
+│   ├── dashboard/      # Dashboard features (home, jobs, profile, settings, notifications, banner, users, jobReports, userVerification)
+│   ├── services/       # Shared API services (useApiClient hook)
+│   ├── hooks/          # Shared hooks
+│   └── notifications/  # Global notification state
 ├── common/             # Shared components and utilities
 │   ├── layouts/        # Layout components (Dashboard, Auth, Public)
 │   ├── theme.ts        # Mantine theme configuration
@@ -77,15 +78,17 @@ features/<feature-name>/
 
 **Authentication Flow**
 - Uses react-auth-kit with cookie-based storage
-- Firebase integration for OAuth providers (Google, Apple, Facebook, X)
-- Protected routes use `RequireAuth` wrapper
-- API client automatically includes auth headers
+- Firebase integration for OAuth providers and push notifications
+- Protected routes use `RequireAuth` wrapper from @auth-kit/react-router
+- API client automatically includes auth headers via useAuthHeader hook
+- Service worker registration for push notifications (see src/serviceWorker.ts)
 
 **API Communication**
-- Central `useApiClient` hook with axios interceptors
-- Base URL configured via environment variables
+- Central `useApiClient` hook (src/features/services/ApiClient.ts) with axios interceptors
+- Base URL configured via environment variables (src/config/env.ts)
 - Automatic error handling for 400/401/403/404 responses
 - Auth header injection for authenticated requests
+- Returns a `sendRequest` function that accepts method, url, data, params, and headers
 
 **State Management**
 - Zustand for local feature state
@@ -93,9 +96,11 @@ features/<feature-name>/
 - Mantine notifications for global notifications
 
 **UI Patterns**
-- Consistent Mantine theme with custom Button/TextInput/Select defaults
+- Consistent Mantine theme with custom Button/TextInput/Select defaults (see src/App.tsx)
+- Custom color palette and font family defined in src/common/theme.ts
 - CSS Modules for component-specific styles
 - Tailwind for utility classes
+- Icons from lucide-react (see src/common/icons.tsx)
 - Responsive design patterns
 
 ## Environment Variables
@@ -117,9 +122,25 @@ Required environment variables (configure in `.env`):
 - API calls automatically include authentication headers via useApiClient hook
 
 **Routing**
-- Public routes: `/` (jobs listing), `/jobs/:id`
-- Auth routes: `/signin`, `/signup`
-- Protected routes: `/my_jobs`, `/post_job`, `/profile`, `/complete_profile`
+- All routes except `/signin` are protected (require authentication)
+- Auth route: `/signin`
+- Protected routes (require authentication):
+  - `/` - Dashboard home
+  - `/jobs` - Jobs listing
+  - `/hired_jobs` - Hired jobs management
+  - `/jobs/:id` - Job details
+  - `/post_job` - Post new job
+  - `/my_jobs` - User's jobs
+  - `/my_jobs/:id/applied` - Applied job details
+  - `/my_jobs/:id/posted` - Posted job details
+  - `/profile` - User profile
+  - `/complete_profile` - Complete profile setup
+  - `/users` - User management
+  - `/users/:id` - User details
+  - `/notification_center` - Notification center
+  - `/banner` - Banner management
+  - `/job_reports` - Job reports
+  - `/user_verification` - User verification management
 
 **Development**
 - Uses feature-based folder structure for better organization
